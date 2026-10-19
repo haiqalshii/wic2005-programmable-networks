@@ -8,22 +8,19 @@ repository: https://github.com/haiqalshii/wic2005-programmable-networks
 answers:
   planes:
     question: "Where are the data, control and management planes in your network?"
-    answer: ""
+    answer: "Data plane: the Linux bridges (s1, s2, s3) in Mininet, which forward the frames. Control plane: none. There is no controller or routing protocol; every address is configured statically. Management plane: topology.yaml and build_topo.py."
   learning:
     question: "How did your switches learn which port leads to each host? Use your MAC table evidence."
-    answer: ""
-  kind:
-    question: "Which of the four kinds of programmability is this assignment (a network described as data, then built and documented by scripts)? Why isn't it any of the other three?"
-    answer: ""
+    answer: "When a ping starts, h1's ARP request reaches the switch. The switch reads the frame's source MAC address and learns which port it came in on. macs.txt shows s1 learning h1 on port 1, h2 on port 2, h3 and h4 on port 3 (towards s2), and h5 and h6 on port 4 (towards s3)."
   two_am:
     question: "Week 1's 2 a.m. change on 40 switches: what would be different if those switches were described like your network?"
-    answer: ""
+    answer: "The change would be one edit to one file, checked by a script before it reaches any switch. Mistakes are faster to find and fix with a separate checker than on 40 switches one by one."
   model:
     question: "What's the difference between your network's data model and its serialisation? Use YAML and JSON as the example."
-    answer: ""
+    answer: "The data model is the structure: switches, hosts and links. YAML and JSON are two ways of writing the same model down. YAML is more readable and allows comments, but both build the same network."
   check:
     question: "Why is it better to catch bad data in check() than with pingall? What did IPv6 notice about a duplicate address that IPv4 didn't?"
-    answer: ""
+    answer: "check() runs before anything is built, so it doesn't use any resources and saves time. pingall only finds problems after the network is running. IPv6 runs Duplicate Address Detection and marked h2's copy dadfailed. IPv4 accepted the duplicate without any warning."
   git:
     question: "What does your Git history give you that copying files into folders named topology-v2-final wouldn't?"
-    answer: ""
+    answer: "Git keeps the full change history: what changed, when and why. I can compare or go back to any version, and it's always clear which version is current."
