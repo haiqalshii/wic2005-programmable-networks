@@ -54,20 +54,25 @@ def check_mine(spec):
 def check(spec):
     """Return a list of problems in the description (an empty list means it looks fine).
 
-    Week 2 task: report any IP address that is used by more than one host.
+    Week 2 task: report any IP address (IPv4 or IPv6) that is used by more than one host.
+    Assignment: also report any link that names a switch or host that doesn't exist.
     """
     problems = []
     ip_owners = {}
 
     for host in spec["hosts"]:
         name = host["name"]
-        addresses = host.get("ip", [])
-
-        if isinstance(addresses, str):
-            addresses = [addresses]
+        addresses = []
+        for key in ("ip", "ipv6"):
+            value = host.get(key, [])
+            addresses += [value] if isinstance(value, str) else value
 
         for address in addresses:
-            ip = address.split("/")[0]
+            # Compare parsed addresses, so fd00:1995::1 and fd00:1995:0::1 count as the same.
+            try:
+                ip = ipaddress.ip_interface(address).ip
+            except ValueError:
+                continue  # check_mine() already reports invalid addresses
 
             if ip in ip_owners:
                 if ip_owners[ip] != name:
@@ -77,6 +82,12 @@ def check(spec):
                     )
             else:
                 ip_owners[ip] = name
+
+    nodes = set(spec["switches"]) | {host["name"] for host in spec["hosts"]}
+    for link in spec["links"]:
+        for end in link:
+            if end not in nodes:
+                problems.append(f"Link {link[0]}-{link[1]} names {end}, which isn't a switch or host")
 
     return problems
 

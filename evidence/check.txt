@@ -1,0 +1,4 @@
+PROBLEM: Duplicate IP address 10.95.0.3 used by h3 and h4
+PROBLEM: Duplicate IP address fd00:1995::3 used by h3 and h4
+PROBLEM: Link s3-s9 names s9, which isn't a switch or host
+Fix the description and try again.
