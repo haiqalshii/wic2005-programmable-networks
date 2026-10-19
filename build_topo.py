@@ -57,7 +57,27 @@ def check(spec):
     Week 2 task: report any IP address that is used by more than one host.
     """
     problems = []
-    # TODO: your code here
+    ip_owners = {}
+
+    for host in spec["hosts"]:
+        name = host["name"]
+        addresses = host.get("ip", [])
+
+        if isinstance(addresses, str):
+            addresses = [addresses]
+
+        for address in addresses:
+            ip = address.split("/")[0]
+
+            if ip in ip_owners:
+                if ip_owners[ip] != name:
+                    problems.append(
+                        f"Duplicate IP address {ip} used by "
+                        f"{ip_owners[ip]} and {name}"
+                    )
+            else:
+                ip_owners[ip] = name
+
     return problems
 
 
