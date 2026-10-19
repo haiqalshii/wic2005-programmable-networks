@@ -83,9 +83,17 @@ def mermaid_diagram(spec):
     def node(name):
         if name in host_ip:
             return f'{name}["{name}<br>{host_ip[name]}"]'
-        return name
+        return f'{name}(["{name}"])'
 
-    lines = ["graph LR"] + [f"  {node(a)} --- {node(b)}" for a, b in spec["links"]]
+    # Drawn top-down: Mermaid places the first node of each line above the second, so put
+    # switch-to-switch links first and always write host links switch-first. Hosts then hang
+    # below the switch they're plugged into.
+    switch_links = [(a, b) for a, b in spec["links"] if a not in host_ip and b not in host_ip]
+    host_links = [(b, a) if a in host_ip else (a, b) for a, b in spec["links"] if (a, b) not in switch_links]
+
+    lines = ["graph TD"] + [f"  {node(a)} --- {node(b)}" for a, b in switch_links + host_links]
+    lines.append(f"  class {','.join(spec['switches'])} switch")
+    lines.append(f"  class {','.join(host_ip)} host")
     return "\n".join(lines)
 
 
@@ -95,7 +103,7 @@ def evidence_section(ev_id, path, title):
     else:
         print(f"WARNING: {path} is missing or empty")
         body = f'<pre id="evidence-{ev_id}" class="missing">Missing: {esc(path)}</pre>'
-    return f'<h3>{esc(title)}</h3>\n<p class="file">{esc(path)}</p>\n{body}'
+    return f'<div class="card"><h3>{esc(title)}</h3>\n<p class="file">{esc(path)}</p>\n{body}</div>'
 
 
 def answers_section(page):
@@ -117,38 +125,133 @@ PAGE = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Network {last4}: built from data</title>
 <style>
-  body {{ font-family: system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.55; color: #1f2937; }}
-  h1 {{ font-size: 1.6rem; margin-bottom: .2rem; }} h2 {{ margin-top: 2.2rem; border-bottom: 1px solid #e5e7eb; }}
-  table {{ border-collapse: collapse; width: 100%; font-size: .92rem; }} th, td {{ border-bottom: 1px solid #e5e7eb; padding: .35rem .5rem; text-align: left; }}
-  pre {{ background: #111827; color: #f3f4f6; padding: .8rem; border-radius: .4rem; overflow-x: auto; font-size: .82rem; }}
-  pre.mermaid {{ background: none; color: inherit; }} pre.missing {{ background: #fef2f2; color: #991b1b; }}
-  .meta, .file {{ color: #6b7280; font-size: .85rem; }} code {{ font-size: .88em; }}
+  :root {{
+    --bg: #f5f5f7; --card: #ffffff; --text: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7;
+    --accent: #0071e3; --code-bg: #f5f5f7; --term-bg: #1d1d1f; --term-text: #f5f5f7;
+    --switch: #0071e3; --host: #ffffff; --nav: rgba(251, 251, 253, .8);
+  }}
+  @media (prefers-color-scheme: dark) {{
+    :root {{
+      --bg: #000000; --card: #1c1c1e; --text: #f5f5f7; --muted: #a1a1a6; --line: #38383a;
+      --accent: #2997ff; --code-bg: #2c2c2e; --term-bg: #0b0b0c; --term-text: #f5f5f7;
+      --switch: #2997ff; --host: #2c2c2e; --nav: rgba(22, 22, 23, .8);
+    }}
+  }}
+  * {{ box-sizing: border-box; }}
+  html {{ scroll-behavior: smooth; }}
+  body {{ margin: 0; background: var(--bg); color: var(--text); line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; }}
+  nav {{ position: sticky; top: 0; z-index: 10; background: var(--nav); backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }}
+  nav .inner {{ max-width: 980px; margin: 0 auto; padding: 0 16px; height: 48px; display: flex; align-items: center;
+    gap: 22px; font-size: .78rem; overflow-x: auto; white-space: nowrap; }}
+  nav .brand {{ font-weight: 600; font-size: .92rem; margin-right: auto; }}
+  nav a {{ color: var(--text); opacity: .8; text-decoration: none; }} nav a:hover {{ opacity: 1; }}
+  main {{ max-width: 980px; margin: 0 auto; padding: 0 16px 80px; }}
+  header {{ text-align: center; padding: 72px 0 40px; }}
+  .eyebrow {{ color: var(--accent); font-weight: 600; font-size: 1rem; margin: 0 0 8px; }}
+  h1 {{ font-size: clamp(2.4rem, 7vw, 4rem); line-height: 1.05; letter-spacing: -.02em; font-weight: 700; margin: 0 0 16px; }}
+  #summary {{ font-size: clamp(1.05rem, 2.4vw, 1.3rem); color: var(--muted); max-width: 40rem; margin: 0 auto 8px; }}
+  .meta {{ color: var(--muted); font-size: .8rem; margin: 16px 0 0; }}
+  .repo {{ display: inline-block; margin-top: 24px; background: var(--accent); color: #fff; text-decoration: none;
+    padding: 10px 22px; border-radius: 980px; font-size: .95rem; }}
+  .repo:hover {{ filter: brightness(1.1); }}
+  .stats {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 8px 0 0; }}
+  .stat {{ background: var(--card); border-radius: 18px; padding: 24px; text-align: center; }}
+  .stat b {{ display: block; font-size: 2.6rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }}
+  .stat span {{ color: var(--muted); font-size: .9rem; }}
+  h2 {{ font-size: clamp(1.8rem, 4.5vw, 2.6rem); letter-spacing: -.015em; font-weight: 700; margin: 80px 0 24px; }}
+  h3 {{ font-size: 1.15rem; font-weight: 600; margin: 0 0 6px; }}
+  .card {{ background: var(--card); border-radius: 18px; padding: 28px; margin-bottom: 16px; overflow: hidden; }}
+  .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }}
+  table {{ border-collapse: collapse; width: 100%; font-size: .92rem; }}
+  th {{ color: var(--muted); font-weight: 500; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }}
+  th, td {{ border-bottom: 1px solid var(--line); padding: 12px 8px; text-align: left; }}
+  tr:last-child td {{ border-bottom: 0; }}
+  .table-wrap {{ overflow-x: auto; }}
+  code {{ font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .86em; background: var(--code-bg);
+    padding: 2px 6px; border-radius: 6px; }}
+  #links ul {{ list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }}
+  #links li {{ background: var(--code-bg); border-radius: 980px; padding: 6px 14px; font-size: .9rem; }}
+  pre {{ background: var(--term-bg); color: var(--term-text); padding: 18px; border-radius: 12px; overflow-x: auto;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .8rem; line-height: 1.55; margin: 12px 0 0; }}
+  pre.mermaid {{ background: none; color: inherit; text-align: center; padding: 8px 0 0; }}
+  pre.missing {{ background: #fff1f0; color: #b42318; }}
+  #diagram .node.switch rect, #diagram .node.switch path {{ fill: var(--switch) !important; stroke: var(--switch) !important; }}
+  #diagram .node.switch .nodeLabel {{ color: #fff !important; font-weight: 600; }}
+  #diagram .node.host rect {{ fill: var(--host) !important; stroke: var(--line) !important; rx: 10px; ry: 10px; }}
+  #diagram .node.host .nodeLabel {{ color: var(--text) !important; }}
+  #diagram .edgePath path, #diagram .flowchart-link {{ stroke: var(--muted) !important; stroke-width: 1.5px !important; }}
+  .file {{ color: var(--muted); font-size: .8rem; margin: 0; font-family: "SF Mono", ui-monospace, Menlo, monospace; }}
+  #evidence .card:first-child {{ grid-column: 1 / -1; }}
+  #answers section {{ background: var(--card); border-radius: 18px; padding: 28px; margin-bottom: 16px; }}
+  #answers h3 {{ font-size: 1.2rem; margin-bottom: 10px; }}
+  #answers p {{ color: var(--muted); margin: 0 0 10px; }} #answers p:last-child {{ margin: 0; }}
+  footer {{ text-align: center; color: var(--muted); font-size: .78rem; padding: 0 16px 48px; }}
+  @media (max-width: 720px) {{
+    .grid {{ grid-template-columns: 1fr; }} .stat {{ padding: 18px 8px; }} .stat b {{ font-size: 2rem; }}
+    .card, #answers section {{ padding: 20px; }} header {{ padding-top: 48px; }}
+  }}
 </style>
 </head>
 <body>
-<h1>My network, built from data</h1>
-<p class="meta">Student ID ending {last4} · generated from <code>{source}</code> by <code>make_page.py</code> on {today}</p>
-<p id="summary">{n_switches} switches, {n_hosts} hosts and {n_links} links, on IPv4 <code>{v4_block}</code> and IPv6 <code>{v6_block}</code>.
-The same file builds this network in Mininet and generates this page.</p>
-<p>Repository: <a id="repository" href="{repo}">{repo}</a></p>
+<nav><div class="inner">
+  <span class="brand">Network {last4}</span>
+  <a href="#network">Network</a><a href="#diagram-card">Diagram</a><a href="#evidence-heading">Evidence</a><a href="#answers-heading">Learned</a>
+</div></nav>
+<main>
+<header>
+  <p class="eyebrow">WIC2005 · Programmable Networks</p>
+  <h1>My network,<br>built from data.</h1>
+  <p id="summary">{n_switches} switches, {n_hosts} hosts and {n_links} links, on IPv4 <code>{v4_block}</code> and IPv6 <code>{v6_block}</code>.
+  The same file builds this network in Mininet and generates this page.</p>
+  <a class="repo" id="repository" href="{repo}">View the repository ›</a>
+  <p class="meta">Student ID ending {last4} · generated from <code>{source}</code> by <code>make_page.py</code> on {today}</p>
+</header>
 
-<h2>The network</h2>
-<section id="hosts">{hosts}</section>
-<h3>Links</h3>
-<section id="links">{links}</section>
-<h3>Diagram</h3>
-<pre class="mermaid" id="diagram">{diagram}</pre>
+<div class="stats">
+  <div class="stat"><b>{n_switches}</b><span>Switches</span></div>
+  <div class="stat"><b>{n_hosts}</b><span>Hosts</span></div>
+  <div class="stat"><b>{n_links}</b><span>Links</span></div>
+</div>
 
-<h2>Evidence from the running network</h2>
-<section id="evidence">{evidence}</section>
+<h2 id="network">The network.</h2>
+<div class="card" id="diagram-card">
+  <h3>Diagram</h3>
+  <pre class="mermaid" id="diagram">{diagram}</pre>
+</div>
+<div class="card">
+  <h3>Hosts</h3>
+  <section id="hosts" class="table-wrap">{hosts}</section>
+</div>
+<div class="card">
+  <h3>Links</h3>
+  <section id="links">{links}</section>
+</div>
 
-<h2>What I learned</h2>
+<h2 id="evidence-heading">Evidence from the running network.</h2>
+<section id="evidence" class="grid">{evidence}</section>
+
+<h2 id="answers-heading">What I learned.</h2>
 <section id="answers">{answers}</section>
+</main>
+<footer>Generated by make_page.py from {source}. One data model, two outputs: a running network and its documentation.</footer>
 
 <script type="application/json" id="topology-data">{data}</script>
 <script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-  mermaid.initialize({{ startOnLoad: true }});
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  mermaid.initialize({{
+    startOnLoad: true,
+    theme: "base",
+    flowchart: {{ curve: "basis", nodeSpacing: 36, rankSpacing: 64, htmlLabels: true }},
+    themeVariables: {{
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
+      fontSize: "14px",
+      lineColor: dark ? "#a1a1a6" : "#6e6e73",
+    }},
+  }});
 </script>
 </body>
 </html>

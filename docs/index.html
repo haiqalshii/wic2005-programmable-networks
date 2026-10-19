@@ -5,38 +5,123 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Network 1995: built from data</title>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.55; color: #1f2937; }
-  h1 { font-size: 1.6rem; margin-bottom: .2rem; } h2 { margin-top: 2.2rem; border-bottom: 1px solid #e5e7eb; }
-  table { border-collapse: collapse; width: 100%; font-size: .92rem; } th, td { border-bottom: 1px solid #e5e7eb; padding: .35rem .5rem; text-align: left; }
-  pre { background: #111827; color: #f3f4f6; padding: .8rem; border-radius: .4rem; overflow-x: auto; font-size: .82rem; }
-  pre.mermaid { background: none; color: inherit; } pre.missing { background: #fef2f2; color: #991b1b; }
-  .meta, .file { color: #6b7280; font-size: .85rem; } code { font-size: .88em; }
+  :root {
+    --bg: #f5f5f7; --card: #ffffff; --text: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7;
+    --accent: #0071e3; --code-bg: #f5f5f7; --term-bg: #1d1d1f; --term-text: #f5f5f7;
+    --switch: #0071e3; --host: #ffffff; --nav: rgba(251, 251, 253, .8);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000; --card: #1c1c1e; --text: #f5f5f7; --muted: #a1a1a6; --line: #38383a;
+      --accent: #2997ff; --code-bg: #2c2c2e; --term-bg: #0b0b0c; --term-text: #f5f5f7;
+      --switch: #2997ff; --host: #2c2c2e; --nav: rgba(22, 22, 23, .8);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  nav { position: sticky; top: 0; z-index: 10; background: var(--nav); backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
+  nav .inner { max-width: 980px; margin: 0 auto; padding: 0 16px; height: 48px; display: flex; align-items: center;
+    gap: 22px; font-size: .78rem; overflow-x: auto; white-space: nowrap; }
+  nav .brand { font-weight: 600; font-size: .92rem; margin-right: auto; }
+  nav a { color: var(--text); opacity: .8; text-decoration: none; } nav a:hover { opacity: 1; }
+  main { max-width: 980px; margin: 0 auto; padding: 0 16px 80px; }
+  header { text-align: center; padding: 72px 0 40px; }
+  .eyebrow { color: var(--accent); font-weight: 600; font-size: 1rem; margin: 0 0 8px; }
+  h1 { font-size: clamp(2.4rem, 7vw, 4rem); line-height: 1.05; letter-spacing: -.02em; font-weight: 700; margin: 0 0 16px; }
+  #summary { font-size: clamp(1.05rem, 2.4vw, 1.3rem); color: var(--muted); max-width: 40rem; margin: 0 auto 8px; }
+  .meta { color: var(--muted); font-size: .8rem; margin: 16px 0 0; }
+  .repo { display: inline-block; margin-top: 24px; background: var(--accent); color: #fff; text-decoration: none;
+    padding: 10px 22px; border-radius: 980px; font-size: .95rem; }
+  .repo:hover { filter: brightness(1.1); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 8px 0 0; }
+  .stat { background: var(--card); border-radius: 18px; padding: 24px; text-align: center; }
+  .stat b { display: block; font-size: 2.6rem; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
+  .stat span { color: var(--muted); font-size: .9rem; }
+  h2 { font-size: clamp(1.8rem, 4.5vw, 2.6rem); letter-spacing: -.015em; font-weight: 700; margin: 80px 0 24px; }
+  h3 { font-size: 1.15rem; font-weight: 600; margin: 0 0 6px; }
+  .card { background: var(--card); border-radius: 18px; padding: 28px; margin-bottom: 16px; overflow: hidden; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+  th { color: var(--muted); font-weight: 500; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+  th, td { border-bottom: 1px solid var(--line); padding: 12px 8px; text-align: left; }
+  tr:last-child td { border-bottom: 0; }
+  .table-wrap { overflow-x: auto; }
+  code { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .86em; background: var(--code-bg);
+    padding: 2px 6px; border-radius: 6px; }
+  #links ul { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  #links li { background: var(--code-bg); border-radius: 980px; padding: 6px 14px; font-size: .9rem; }
+  pre { background: var(--term-bg); color: var(--term-text); padding: 18px; border-radius: 12px; overflow-x: auto;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: .8rem; line-height: 1.55; margin: 12px 0 0; }
+  pre.mermaid { background: none; color: inherit; text-align: center; padding: 8px 0 0; }
+  pre.missing { background: #fff1f0; color: #b42318; }
+  #diagram .node.switch rect, #diagram .node.switch path { fill: var(--switch) !important; stroke: var(--switch) !important; }
+  #diagram .node.switch .nodeLabel { color: #fff !important; font-weight: 600; }
+  #diagram .node.host rect { fill: var(--host) !important; stroke: var(--line) !important; rx: 10px; ry: 10px; }
+  #diagram .node.host .nodeLabel { color: var(--text) !important; }
+  #diagram .edgePath path, #diagram .flowchart-link { stroke: var(--muted) !important; stroke-width: 1.5px !important; }
+  .file { color: var(--muted); font-size: .8rem; margin: 0; font-family: "SF Mono", ui-monospace, Menlo, monospace; }
+  #evidence .card:first-child { grid-column: 1 / -1; }
+  #answers section { background: var(--card); border-radius: 18px; padding: 28px; margin-bottom: 16px; }
+  #answers h3 { font-size: 1.2rem; margin-bottom: 10px; }
+  #answers p { color: var(--muted); margin: 0 0 10px; } #answers p:last-child { margin: 0; }
+  footer { text-align: center; color: var(--muted); font-size: .78rem; padding: 0 16px 48px; }
+  @media (max-width: 720px) {
+    .grid { grid-template-columns: 1fr; } .stat { padding: 18px 8px; } .stat b { font-size: 2rem; }
+    .card, #answers section { padding: 20px; } header { padding-top: 48px; }
+  }
 </style>
 </head>
 <body>
-<h1>My network, built from data</h1>
-<p class="meta">Student ID ending 1995 · generated from <code>topology.yaml</code> by <code>make_page.py</code> on 2026-10-19</p>
-<p id="summary">3 switches, 6 hosts and 8 links, on IPv4 <code>10.95.0.0/16</code> and IPv6 <code>fd00:1995::/32</code>.
-The same file builds this network in Mininet and generates this page.</p>
-<p>Repository: <a id="repository" href="https://github.com/haiqalshii/wic2005-programmable-networks">https://github.com/haiqalshii/wic2005-programmable-networks</a></p>
+<nav><div class="inner">
+  <span class="brand">Network 1995</span>
+  <a href="#network">Network</a><a href="#diagram-card">Diagram</a><a href="#evidence-heading">Evidence</a><a href="#answers-heading">Learned</a>
+</div></nav>
+<main>
+<header>
+  <p class="eyebrow">WIC2005 · Programmable Networks</p>
+  <h1>My network,<br>built from data.</h1>
+  <p id="summary">3 switches, 6 hosts and 8 links, on IPv4 <code>10.95.0.0/16</code> and IPv6 <code>fd00:1995::/32</code>.
+  The same file builds this network in Mininet and generates this page.</p>
+  <a class="repo" id="repository" href="https://github.com/haiqalshii/wic2005-programmable-networks">View the repository ›</a>
+  <p class="meta">Student ID ending 1995 · generated from <code>topology.yaml</code> by <code>make_page.py</code> on 2026-10-19</p>
+</header>
 
-<h2>The network</h2>
-<section id="hosts"><table><thead><tr><th>Host</th><th>IPv4</th><th>IPv6</th><th>Switch</th></tr></thead><tbody><tr><td>h1</td><td><code>10.95.0.1/24</code></td><td><code>fd00:1995::1/64</code></td><td>s1</td></tr><tr><td>h2</td><td><code>10.95.0.2/24</code></td><td><code>fd00:1995::2/64</code></td><td>s1</td></tr><tr><td>h3</td><td><code>10.95.0.3/24</code></td><td><code>fd00:1995::3/64</code></td><td>s2</td></tr><tr><td>h4</td><td><code>10.95.0.4/24</code></td><td><code>fd00:1995::4/64</code></td><td>s2</td></tr><tr><td>h5</td><td><code>10.95.0.5/24</code></td><td><code>fd00:1995::5/64</code></td><td>s3</td></tr><tr><td>h6</td><td><code>10.95.0.6/24</code></td><td><code>fd00:1995::6/64</code></td><td>s3</td></tr></tbody></table></section>
-<h3>Links</h3>
-<section id="links"><ul><li>h1 — s1</li><li>h2 — s1</li><li>h3 — s2</li><li>h4 — s2</li><li>h5 — s3</li><li>h6 — s3</li><li>s1 — s2</li><li>s1 — s3</li></ul></section>
-<h3>Diagram</h3>
-<pre class="mermaid" id="diagram">graph LR
-  h1[&quot;h1&lt;br&gt;10.95.0.1&quot;] --- s1
-  h2[&quot;h2&lt;br&gt;10.95.0.2&quot;] --- s1
-  h3[&quot;h3&lt;br&gt;10.95.0.3&quot;] --- s2
-  h4[&quot;h4&lt;br&gt;10.95.0.4&quot;] --- s2
-  h5[&quot;h5&lt;br&gt;10.95.0.5&quot;] --- s3
-  h6[&quot;h6&lt;br&gt;10.95.0.6&quot;] --- s3
-  s1 --- s2
-  s1 --- s3</pre>
+<div class="stats">
+  <div class="stat"><b>3</b><span>Switches</span></div>
+  <div class="stat"><b>6</b><span>Hosts</span></div>
+  <div class="stat"><b>8</b><span>Links</span></div>
+</div>
 
-<h2>Evidence from the running network</h2>
-<section id="evidence"><h3>pingall: every host reaches every other</h3>
+<h2 id="network">The network.</h2>
+<div class="card" id="diagram-card">
+  <h3>Diagram</h3>
+  <pre class="mermaid" id="diagram">graph TD
+  s1([&quot;s1&quot;]) --- s2([&quot;s2&quot;])
+  s1([&quot;s1&quot;]) --- s3([&quot;s3&quot;])
+  s1([&quot;s1&quot;]) --- h1[&quot;h1&lt;br&gt;10.95.0.1&quot;]
+  s1([&quot;s1&quot;]) --- h2[&quot;h2&lt;br&gt;10.95.0.2&quot;]
+  s2([&quot;s2&quot;]) --- h3[&quot;h3&lt;br&gt;10.95.0.3&quot;]
+  s2([&quot;s2&quot;]) --- h4[&quot;h4&lt;br&gt;10.95.0.4&quot;]
+  s3([&quot;s3&quot;]) --- h5[&quot;h5&lt;br&gt;10.95.0.5&quot;]
+  s3([&quot;s3&quot;]) --- h6[&quot;h6&lt;br&gt;10.95.0.6&quot;]
+  class s1,s2,s3 switch
+  class h1,h2,h3,h4,h5,h6 host</pre>
+</div>
+<div class="card">
+  <h3>Hosts</h3>
+  <section id="hosts" class="table-wrap"><table><thead><tr><th>Host</th><th>IPv4</th><th>IPv6</th><th>Switch</th></tr></thead><tbody><tr><td>h1</td><td><code>10.95.0.1/24</code></td><td><code>fd00:1995::1/64</code></td><td>s1</td></tr><tr><td>h2</td><td><code>10.95.0.2/24</code></td><td><code>fd00:1995::2/64</code></td><td>s1</td></tr><tr><td>h3</td><td><code>10.95.0.3/24</code></td><td><code>fd00:1995::3/64</code></td><td>s2</td></tr><tr><td>h4</td><td><code>10.95.0.4/24</code></td><td><code>fd00:1995::4/64</code></td><td>s2</td></tr><tr><td>h5</td><td><code>10.95.0.5/24</code></td><td><code>fd00:1995::5/64</code></td><td>s3</td></tr><tr><td>h6</td><td><code>10.95.0.6/24</code></td><td><code>fd00:1995::6/64</code></td><td>s3</td></tr></tbody></table></section>
+</div>
+<div class="card">
+  <h3>Links</h3>
+  <section id="links"><ul><li>h1 — s1</li><li>h2 — s1</li><li>h3 — s2</li><li>h4 — s2</li><li>h5 — s3</li><li>h6 — s3</li><li>s1 — s2</li><li>s1 — s3</li></ul></section>
+</div>
+
+<h2 id="evidence-heading">Evidence from the running network.</h2>
+<section id="evidence" class="grid"><div class="card"><h3>pingall: every host reaches every other</h3>
 <p class="file">evidence/pingall.txt</p>
 <pre id="evidence-pingall">mininet&gt; pingall
 *** Ping: testing ping reachability
@@ -46,16 +131,16 @@ h3 -&gt; h1 h2 h4 h5 h6
 h4 -&gt; h1 h2 h3 h5 h6 
 h5 -&gt; h1 h2 h3 h4 h6 
 h6 -&gt; h1 h2 h3 h4 h5 
-*** Results: 0% dropped (30/30 received)</pre>
-<h3>h1&#x27;s neighbour table: ARP and Neighbour Discovery</h3>
+*** Results: 0% dropped (30/30 received)</pre></div>
+<div class="card"><h3>h1&#x27;s neighbour table: ARP and Neighbour Discovery</h3>
 <p class="file">evidence/neigh.txt</p>
 <pre id="evidence-neigh">10.95.0.2 dev h1-eth0 lladdr 00:00:00:00:00:02 REACHABLE
 10.95.0.5 dev h1-eth0 lladdr 00:00:00:00:00:05 REACHABLE
 10.95.0.4 dev h1-eth0 lladdr 00:00:00:00:00:04 REACHABLE
 10.95.0.6 dev h1-eth0 lladdr 00:00:00:00:00:06 REACHABLE
 10.95.0.3 dev h1-eth0 lladdr 00:00:00:00:00:03 REACHABLE
-fd00:1995::2 dev h1-eth0 lladdr 00:00:00:00:00:02 REACHABLE</pre>
-<h3>What a switch&#x27;s data plane learned: brctl showmacs</h3>
+fd00:1995::2 dev h1-eth0 lladdr 00:00:00:00:00:02 REACHABLE</pre></div>
+<div class="card"><h3>What a switch&#x27;s data plane learned: brctl showmacs</h3>
 <p class="file">evidence/macs.txt</p>
 <pre id="evidence-macs">port no	mac addr		is local?	ageing timer
   1	00:00:00:00:00:01	no		   0.01
@@ -74,8 +159,8 @@ fd00:1995::2 dev h1-eth0 lladdr 00:00:00:00:00:02 REACHABLE</pre>
   4	8a:3b:c6:d3:21:9d	yes		   0.00
   3	9e:88:9a:78:62:85	no		   1.72
   3	be:6a:10:1c:93:4d	yes		   0.00
-  3	be:6a:10:1c:93:4d	yes		   0.00</pre>
-<h3>A duplicate address: IPv6 notices, IPv4 doesn&#x27;t</h3>
+  3	be:6a:10:1c:93:4d	yes		   0.00</pre></div>
+<div class="card"><h3>A duplicate address: IPv6 notices, IPv4 doesn&#x27;t</h3>
 <p class="file">evidence/dad.txt</p>
 <pre id="evidence-dad">2: h2-eth0@if17: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc noqueue state UP group default qlen 1000 link-netnsid 0
     inet6 fd00:1995::1/64 scope global dadfailed tentative 
@@ -88,15 +173,15 @@ fd00:1995::2 dev h1-eth0 lladdr 00:00:00:00:00:02 REACHABLE</pre>
     inet 10.95.0.2/24 brd 10.95.0.255 scope global h2-eth0
        valid_lft forever preferred_lft forever
     inet 10.95.0.1/24 scope global secondary h2-eth0
-       valid_lft forever preferred_lft forever</pre>
-<h3>check() stopping bad data before it&#x27;s built</h3>
+       valid_lft forever preferred_lft forever</pre></div>
+<div class="card"><h3>check() stopping bad data before it&#x27;s built</h3>
 <p class="file">evidence/check.txt</p>
 <pre id="evidence-check">PROBLEM: Duplicate IP address 10.95.0.3 used by h3 and h4
 PROBLEM: Duplicate IP address fd00:1995::3 used by h3 and h4
 PROBLEM: Link s3-s9 names s9, which isn&#x27;t a switch or host
-Fix the description and try again.</pre></section>
+Fix the description and try again.</pre></div></section>
 
-<h2>What I learned</h2>
+<h2 id="answers-heading">What I learned.</h2>
 <section id="answers"><section id="answer-planes"><h3>Where are the data, control and management planes in your network?</h3><p>(Not answered yet.)</p></section>
 <section id="answer-learning"><h3>How did your switches learn which port leads to each host? Use your MAC table evidence.</h3><p>(Not answered yet.)</p></section>
 <section id="answer-kind"><h3>Which of the four kinds of programmability is this assignment (a network described as data, then built and documented by scripts)? Why isn&#x27;t it any of the other three?</h3><p>(Not answered yet.)</p></section>
@@ -104,6 +189,8 @@ Fix the description and try again.</pre></section>
 <section id="answer-model"><h3>What&#x27;s the difference between your network&#x27;s data model and its serialisation? Use YAML and JSON as the example.</h3><p>(Not answered yet.)</p></section>
 <section id="answer-check"><h3>Why is it better to catch bad data in check() than with pingall? What did IPv6 notice about a duplicate address that IPv4 didn&#x27;t?</h3><p>(Not answered yet.)</p></section>
 <section id="answer-git"><h3>What does your Git history give you that copying files into folders named topology-v2-final wouldn&#x27;t?</h3><p>(Not answered yet.)</p></section></section>
+</main>
+<footer>Generated by make_page.py from topology.yaml. One data model, two outputs: a running network and its documentation.</footer>
 
 <script type="application/json" id="topology-data">{
   "student_id_last4": "1995",
@@ -181,7 +268,17 @@ Fix the description and try again.</pre></section>
 }</script>
 <script type="module">
   import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-  mermaid.initialize({ startOnLoad: true });
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    flowchart: { curve: "basis", nodeSpacing: 36, rankSpacing: 64, htmlLabels: true },
+    themeVariables: {
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif',
+      fontSize: "14px",
+      lineColor: dark ? "#a1a1a6" : "#6e6e73",
+    },
+  });
 </script>
 </body>
 </html>
