@@ -1,5 +1,5 @@
 mininet> pingall
-mininet> mininet> *** Ping: testing ping reachability
+*** Ping: testing ping reachability
 h1 -> h2 h3 h4 h5 h6 
 h2 -> h1 h3 h4 h5 h6 
 h3 -> h1 h2 h4 h5 h6 
