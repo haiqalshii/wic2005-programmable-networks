@@ -1,21 +1,3 @@
-# topology.yaml — a small network described as data.
-# build_topo.py reads this file and creates exactly this network in Mininet.
-#
-# Design: a two-tier tree. s1 is the core switch; s2 and s3 are edge switches
-# that each hang off s1. Two hosts sit on each switch. There are no loops
-# (LinuxBridge here runs without STP), and every host reaches every other via s1.
-#
-#            h1   h2
-#             \   /
-#              s1
-#             /   \
-#           s2     s3
-#          /  \   /  \
-#         h3  h4 h5  h6
-#
-# Don't put your full student ID here: this file goes in your repository,
-# which may be public.
-
 student_id_last4: "1995"
 
 switches:
@@ -43,7 +25,6 @@ hosts:
     ip: 10.95.0.6/24
     ipv6: fd00:1995::6/64
 
-# Each link joins two nodes.
 links:
   - [h1, s1]
   - [h2, s1]
