@@ -1,0 +1,4 @@
+10.95.40.10 via 10.95.104.1 dev r1-eth2 src 10.95.104.2 uid 0 
+    cache 
+10.95.41.10 via 10.95.104.1 dev r1-eth2 src 10.95.104.2 uid 0 
+    cache 
