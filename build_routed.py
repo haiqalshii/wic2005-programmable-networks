@@ -139,21 +139,52 @@ def check_spec(spec):
     return problems
 
 
+
 def check_paths(spec):
-    """TODO (assignment): the same job as check_paths() in routers.py, for any network.
-
-    For every pair of different hosts, follow the packet from the source host's router,
-    using lookup(spec, router, destination) at each router and owner(spec, next_hop) to move
-    on. Report a router with no route, and a loop (a router visited twice on one path).
-    hosts(spec) gives you each host's address and router.
-
-    Start from your check_paths() in routers.py: the logic is the same; only the way you
-    find hosts, routers and next hops changes.
-    """
+    """Follow every host-to-host path and report missing routes and loops."""
     problems = []
-    # TODO: your code here
-    return problems
+    all_hosts = hosts(spec)
 
+    for src, (_, source_router) in all_hosts.items():
+        for dst, (destination, _) in all_hosts.items():
+            if src == dst:
+                continue
+
+            router = source_router
+            path = []
+
+            while True:
+                if router in path:
+                    path.append(router)
+                    problems.append(
+                        f"{src} to {dst}: loop {' -> '.join(path)}"
+                    )
+                    break
+
+                path.append(router)
+                action, next_hop = lookup(spec, router, destination)
+
+                if action == "connected":
+                    break
+
+                if action == "none":
+                    problems.append(
+                        f"{src} to {dst}: {router} has no route to "
+                        f"{destination}"
+                    )
+                    break
+
+                next_router = owner(spec, next_hop)
+                if next_router not in spec["routers"]:
+                    problems.append(
+                        f"{src} to {dst}: next hop {next_hop} "
+                        "is not a router"
+                    )
+                    break
+
+                router = next_router
+
+    return problems
 
 class Router(Node):
     """A Linux host acting as a router: forwarding on, ICMP errors not rate-limited."""

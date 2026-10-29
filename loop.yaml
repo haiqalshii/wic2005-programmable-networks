@@ -1,21 +1,59 @@
-# routes.yaml: the routes from Step 4, as data. Replace every NN (see "Your addresses").
-#
-#   python3 routers.py --id NNNN --routes routes.yaml
-#
-# checks every route first, then switches forwarding on and applies them. IPv4 only.
+student_id_last4: "1995"
 
-r1:
-  - to: 10.95.32.0/24
-    via: 10.95.12.2
-  - to: 10.95.32.0/20
-    via: 10.95.13.2
+routers: [r1, r2, r3, r4]
 
-r3:
-  - to: 10.95.32.0/20
-    via: 10.95.13.1
-  - to: 10.95.1.0/24
-    via: 10.95.13.1
+lans:
+  - name: lan-alpha
+    network: 10.95.10.0/24
+    router: r1
+    host: h1
 
-r2:
-  - to: 10.95.1.0/24
-    via: 10.95.12.1
+  - name: lan-beta
+    network: 10.95.20.0/24
+    router: r2
+    host: h2
+
+  - name: lan-gamma
+    network: 10.95.40.0/24
+    router: r3
+    host: h3
+
+  - name: lan-delta
+    network: 10.95.41.0/24
+    router: r4
+    host: h4
+
+links:
+  - [r1, r2, 10.95.101.0/30]
+  - [r2, r3, 10.95.102.0/30]
+  - [r3, r4, 10.95.103.0/30]
+  - [r4, r1, 10.95.104.0/30]
+
+routes:
+  r1:
+    - to: 10.95.20.0/24
+      via: 10.95.101.2
+    - to: 10.95.40.0/23
+      via: 10.95.104.1
+
+  r2:
+    - to: 10.95.10.0/24
+      via: 10.95.101.1
+    - to: 10.95.40.0/23
+      via: 10.95.102.2
+
+  r3:
+    - to: 10.95.10.0/24
+      via: 10.95.102.1
+    - to: 10.95.20.0/24
+      via: 10.95.102.1
+    - to: 10.95.41.0/24
+      via: 10.95.103.2
+
+  r4:
+    - to: 10.95.10.0/24
+      via: 10.95.104.2
+    - to: 10.95.20.0/24
+      via: 10.95.104.2
+    - to: 10.95.40.0/24
+      via: 10.95.104.2
