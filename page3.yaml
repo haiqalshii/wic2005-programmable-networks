@@ -7,13 +7,26 @@ repository: https://github.com/YOUR-USERNAME/YOUR-REPOSITORY
 answers:
   design:
     question: "Describe your design: why these routers, LANs and links, and how you chose the addresses."
-    answer: ""
+    answer: 
+      I arranged four routers in a square, with one LAN and one host attached to each router. The square creates two physical paths between parts of the network that resembles 'X' pattern, although the static routing tables choose only one path at a time.
+
+      I used 10.95.10.0/24 and 10.95.20.0/24 for the first two LANs. I placed the other LANs at 10.95.40.0/24 and 10.95.41.0/24 so they could be represented by one correctly aligned /23 summary. The four router links use separate /30 networks from 10.95.101.0/30 through 10.95.104.0/30.
+
   summary:
     question: "Which route summarises several LANs? Which networks does it cover, why is it correct, and what else would it attract if you added a network inside its range?"
-    answer: ""
+    answer: 
+      The summary route is 10.95.40.0/23. It covers both 10.95.40.0/24 and 10.95.41.0/24 because a /23 beginning at the even boundary 40 spans third-octet values 40 and 41. It does not include the LANs at 10.95.10.0/24 or 10.95.20.0/24.
+
   failure:
     question: "When you took a link down, what happened, and why couldn't your routes recover even though another path existed? What would have recovered?"
-    answer: ""
+    answer: 
+      I took down the r1-r4 link and traced traffic from h1 toward h3. The trace stopped at r1 with a network-unreachable result, even though the square still had the physical path r1-r2-r3.
+
+      The network did not recover because r1's static summary route still depended on the failed r1-r4 link. Static routes do not discover topology changes or calculate another path by themselves.
+
   control_plane:
     question: "In your network, what was the control plane? Who worked out the routes, and what does that mean for a network of 40 routers?"
-    answer: ""
+    answer: 
+      I acted as the control plane by designing the topology, calculating the routes and next hops, and recording them in network.yaml. The Python program checked those decisions and installed them, but it did not independently discover paths.
+
+      Doing this manually for 40 routers would be slow and error-prone, especially after failures or topology changes. A larger network needs a routing protocol or central controller to calculate paths, distribute routes and update the forwarding tables consistently.

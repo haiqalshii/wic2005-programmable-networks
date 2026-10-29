@@ -52,21 +52,44 @@ def links_section(spec):
 
 
 def routing_tables_section(spec):
-    """TODO (assignment): return HTML showing each router's routing table, as the router sees it.
+    """Return every router's connected and static routes, longest prefix first."""
+    sections = []
+    interfaces = plan(spec)
 
-    For each router in spec["routers"], list:
-      - its directly connected networks: plan(spec)[router] gives its interfaces;
-        each one's .network is a connected network
-      - its static routes: spec["routes"].get(router), each with "to" and "via"
-    sorted longest prefix first (the order in which longest-prefix match prefers them).
-    Show each entry's destination and where it goes ("directly connected", or the next hop).
-    For example, one table per router:
-        <h3>r1</h3><table><tr><th>Destination</th><th>Next hop</th></tr>
-        <tr><td>10.7.12.0/30</td><td>directly connected</td></tr> ...</table>
-    Use esc() on every value.
-    """
-    return "<p>TODO: show each router's routing table.</p>"
+    for router in spec["routers"]:
+        entries = [
+            (interface.network, None)
+            for interface in interfaces[router]
+        ]
+        entries += [
+            (ipaddress.ip_network(route["to"]), route["via"])
+            for route in (spec.get("routes") or {}).get(router) or []
+        ]
+        entries.sort(
+            key=lambda entry: entry[0].prefixlen,
+            reverse=True,
+        )
 
+        rows = []
+        for destination, next_hop in entries:
+            where = (
+                "directly connected"
+                if next_hop is None
+                else f"<code>{esc(next_hop)}</code>"
+            )
+            rows.append(
+                f"<tr><td><code>{esc(destination)}</code></td>"
+                f"<td>{where}</td></tr>"
+            )
+
+        sections.append(
+            f"<h3>{esc(router)}</h3>"
+            "<table><thead><tr><th>Destination</th>"
+            "<th>Next hop</th></tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody></table>"
+        )
+
+    return "\n".join(sections)
 
 def mermaid_diagram(spec):
     lines = ["graph LR"]
