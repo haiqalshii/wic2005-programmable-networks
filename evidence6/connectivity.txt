@@ -1,14 +1,282 @@
-Recorded UTC: 2026-11-20T09:02:43.619413+00:00
+Recorded UTC: 2026-11-20T09:35:47.732400+00:00
 Collector: connectivity
 $ python3 build_overlay.py overlay.yaml
-Traceback (most recent call last):
-  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 199, in main
-    actions[name]()
-  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 120, in connectivity
-    with session('overlay.yaml') as (net, spec):
-  File "/usr/lib/python3.10/contextlib.py", line 135, in __enter__
-    return next(self.gen)
-  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 46, in session
-    raise RuntimeError("BLOCKED: No module named 'mininet'; no network was constructed")
-RuntimeError: BLOCKED: No module named 'mininet'; no network was constructed
-INCOMPLETE: no successful live experiment is claimed.
+VTEP commands on cedar (10.95.0.1):
+  ip link add br9510 type bridge
+  ip link set br9510 mtu 1500 up
+  ip link add vxlan9510 type vxlan id 9510 local 10.95.0.1 dstport 4789 dev cedar-eth0
+  ip link set vxlan9510 master br9510
+  ip link set vxlan9510 mtu 1500 up
+  ip link set cedar-eth1 master br9510
+  ip link set cedar-eth1 mtu 1500 up
+  ip link set cedar-eth2 master br9510
+  ip link set cedar-eth2 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.2
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.3
+  ip link add br9520 type bridge
+  ip link set br9520 mtu 1500 up
+  ip link add vxlan9520 type vxlan id 9520 local 10.95.0.1 dstport 4789 dev cedar-eth0
+  ip link set vxlan9520 master br9520
+  ip link set vxlan9520 mtu 1500 up
+  ip link set cedar-eth3 master br9520
+  ip link set cedar-eth3 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9520 dst 10.95.0.3
+VTEP commands on maple (10.95.0.2):
+  ip link add br9510 type bridge
+  ip link set br9510 mtu 1500 up
+  ip link add vxlan9510 type vxlan id 9510 local 10.95.0.2 dstport 4789 dev maple-eth0
+  ip link set vxlan9510 master br9510
+  ip link set vxlan9510 mtu 1500 up
+  ip link set maple-eth1 master br9510
+  ip link set maple-eth1 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.1
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.3
+VTEP commands on willow (10.95.0.3):
+  ip link add br9510 type bridge
+  ip link set br9510 mtu 1500 up
+  ip link add vxlan9510 type vxlan id 9510 local 10.95.0.3 dstport 4789 dev willow-eth0
+  ip link set vxlan9510 master br9510
+  ip link set vxlan9510 mtu 1500 up
+  ip link set willow-eth1 master br9510
+  ip link set willow-eth1 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.1
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.2
+  ip link add br9520 type bridge
+  ip link set br9520 mtu 1500 up
+  ip link add vxlan9520 type vxlan id 9520 local 10.95.0.3 dstport 4789 dev willow-eth0
+  ip link set vxlan9520 master br9520
+  ip link set vxlan9520 mtu 1500 up
+  ip link set willow-eth2 master br9520
+  ip link set willow-eth2 mtu 1500 up
+  ip link set willow-eth3 master br9520
+  ip link set willow-eth3 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9520 dst 10.95.0.1
+Fresh network: {
+  "hypervisors": {
+    "cedar": "10.95.0.1",
+    "maple": "10.95.0.2",
+    "willow": "10.95.0.3"
+  },
+  "vms": {
+    "res1": {
+      "tenant": "research",
+      "vni": 9510,
+      "hv": "cedar",
+      "ip": "10.95.50.10",
+      "prefix": 24,
+      "mac": "02:00:25:26:00:0a"
+    },
+    "res2": {
+      "tenant": "research",
+      "vni": 9510,
+      "hv": "maple",
+      "ip": "10.95.50.11",
+      "prefix": 24,
+      "mac": "02:00:25:26:00:0b"
+    },
+    "res3": {
+      "tenant": "research",
+      "vni": 9510,
+      "hv": "willow",
+      "ip": "10.95.50.12",
+      "prefix": 24,
+      "mac": "02:00:25:26:00:0c"
+    },
+    "res4": {
+      "tenant": "research",
+      "vni": 9510,
+      "hv": "cedar",
+      "ip": "10.95.50.13",
+      "prefix": 24,
+      "mac": "02:00:25:26:00:0d"
+    },
+    "art1": {
+      "tenant": "studio",
+      "vni": 9520,
+      "hv": "cedar",
+      "ip": "10.95.50.10",
+      "prefix": 24,
+      "mac": "02:00:25:30:00:0a"
+    },
+    "art2": {
+      "tenant": "studio",
+      "vni": 9520,
+      "hv": "willow",
+      "ip": "10.95.50.11",
+      "prefix": 24,
+      "mac": "02:00:25:30:00:0b"
+    },
+    "art3": {
+      "tenant": "studio",
+      "vni": 9520,
+      "hv": "willow",
+      "ip": "10.95.50.12",
+      "prefix": 24,
+      "mac": "02:00:25:30:00:0c"
+    }
+  }
+}
+$ res1 ping -n -c 2 -W 1 -M do -s 56 10.95.50.11
+PING 10.95.50.11 (10.95.50.11) 56(84) bytes of data.
+64 bytes from 10.95.50.11: icmp_seq=1 ttl=64 time=0.327 ms
+64 bytes from 10.95.50.11: icmp_seq=2 ttl=64 time=0.142 ms
+
+--- 10.95.50.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1016ms
+rtt min/avg/max/mdev = 0.142/0.234/0.327/0.092 ms
+[exit 0]
+$ res1 ping -n -c 2 -W 1 -M do -s 56 10.95.50.12
+PING 10.95.50.12 (10.95.50.12) 56(84) bytes of data.
+64 bytes from 10.95.50.12: icmp_seq=1 ttl=64 time=0.139 ms
+64 bytes from 10.95.50.12: icmp_seq=2 ttl=64 time=0.229 ms
+
+--- 10.95.50.12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1017ms
+rtt min/avg/max/mdev = 0.139/0.184/0.229/0.045 ms
+[exit 0]
+$ res1 ping -n -c 2 -W 1 -M do -s 56 10.95.50.13
+PING 10.95.50.13 (10.95.50.13) 56(84) bytes of data.
+64 bytes from 10.95.50.13: icmp_seq=1 ttl=64 time=0.105 ms
+64 bytes from 10.95.50.13: icmp_seq=2 ttl=64 time=0.120 ms
+
+--- 10.95.50.13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1013ms
+rtt min/avg/max/mdev = 0.105/0.112/0.120/0.007 ms
+[exit 0]
+$ res2 ping -n -c 2 -W 1 -M do -s 56 10.95.50.10
+PING 10.95.50.10 (10.95.50.10) 56(84) bytes of data.
+64 bytes from 10.95.50.10: icmp_seq=1 ttl=64 time=0.139 ms
+64 bytes from 10.95.50.10: icmp_seq=2 ttl=64 time=0.170 ms
+
+--- 10.95.50.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1016ms
+rtt min/avg/max/mdev = 0.139/0.154/0.170/0.015 ms
+[exit 0]
+$ res2 ping -n -c 2 -W 1 -M do -s 56 10.95.50.12
+PING 10.95.50.12 (10.95.50.12) 56(84) bytes of data.
+64 bytes from 10.95.50.12: icmp_seq=1 ttl=64 time=0.186 ms
+64 bytes from 10.95.50.12: icmp_seq=2 ttl=64 time=0.111 ms
+
+--- 10.95.50.12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1015ms
+rtt min/avg/max/mdev = 0.111/0.148/0.186/0.037 ms
+[exit 0]
+$ res2 ping -n -c 2 -W 1 -M do -s 56 10.95.50.13
+PING 10.95.50.13 (10.95.50.13) 56(84) bytes of data.
+64 bytes from 10.95.50.13: icmp_seq=1 ttl=64 time=0.154 ms
+64 bytes from 10.95.50.13: icmp_seq=2 ttl=64 time=0.137 ms
+
+--- 10.95.50.13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1017ms
+rtt min/avg/max/mdev = 0.137/0.145/0.154/0.008 ms
+[exit 0]
+$ res3 ping -n -c 2 -W 1 -M do -s 56 10.95.50.10
+PING 10.95.50.10 (10.95.50.10) 56(84) bytes of data.
+64 bytes from 10.95.50.10: icmp_seq=1 ttl=64 time=0.104 ms
+64 bytes from 10.95.50.10: icmp_seq=2 ttl=64 time=0.169 ms
+
+--- 10.95.50.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1015ms
+rtt min/avg/max/mdev = 0.104/0.136/0.169/0.032 ms
+[exit 0]
+$ res3 ping -n -c 2 -W 1 -M do -s 56 10.95.50.11
+PING 10.95.50.11 (10.95.50.11) 56(84) bytes of data.
+64 bytes from 10.95.50.11: icmp_seq=1 ttl=64 time=0.113 ms
+64 bytes from 10.95.50.11: icmp_seq=2 ttl=64 time=0.156 ms
+
+--- 10.95.50.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1014ms
+rtt min/avg/max/mdev = 0.113/0.134/0.156/0.021 ms
+[exit 0]
+$ res3 ping -n -c 2 -W 1 -M do -s 56 10.95.50.13
+PING 10.95.50.13 (10.95.50.13) 56(84) bytes of data.
+64 bytes from 10.95.50.13: icmp_seq=1 ttl=64 time=0.222 ms
+64 bytes from 10.95.50.13: icmp_seq=2 ttl=64 time=0.162 ms
+
+--- 10.95.50.13 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1016ms
+rtt min/avg/max/mdev = 0.162/0.192/0.222/0.030 ms
+[exit 0]
+$ res4 ping -n -c 2 -W 1 -M do -s 56 10.95.50.10
+PING 10.95.50.10 (10.95.50.10) 56(84) bytes of data.
+64 bytes from 10.95.50.10: icmp_seq=1 ttl=64 time=0.038 ms
+64 bytes from 10.95.50.10: icmp_seq=2 ttl=64 time=0.060 ms
+
+--- 10.95.50.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1015ms
+rtt min/avg/max/mdev = 0.038/0.049/0.060/0.011 ms
+[exit 0]
+$ res4 ping -n -c 2 -W 1 -M do -s 56 10.95.50.11
+PING 10.95.50.11 (10.95.50.11) 56(84) bytes of data.
+64 bytes from 10.95.50.11: icmp_seq=1 ttl=64 time=0.075 ms
+64 bytes from 10.95.50.11: icmp_seq=2 ttl=64 time=0.229 ms
+
+--- 10.95.50.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1017ms
+rtt min/avg/max/mdev = 0.075/0.152/0.229/0.077 ms
+[exit 0]
+$ res4 ping -n -c 2 -W 1 -M do -s 56 10.95.50.12
+PING 10.95.50.12 (10.95.50.12) 56(84) bytes of data.
+64 bytes from 10.95.50.12: icmp_seq=1 ttl=64 time=0.068 ms
+64 bytes from 10.95.50.12: icmp_seq=2 ttl=64 time=0.103 ms
+
+--- 10.95.50.12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1015ms
+rtt min/avg/max/mdev = 0.068/0.085/0.103/0.017 ms
+[exit 0]
+$ art1 ping -n -c 2 -W 1 -M do -s 56 10.95.50.11
+PING 10.95.50.11 (10.95.50.11) 56(84) bytes of data.
+64 bytes from 10.95.50.11: icmp_seq=1 ttl=64 time=0.198 ms
+64 bytes from 10.95.50.11: icmp_seq=2 ttl=64 time=0.180 ms
+
+--- 10.95.50.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1016ms
+rtt min/avg/max/mdev = 0.180/0.189/0.198/0.009 ms
+[exit 0]
+$ art1 ping -n -c 2 -W 1 -M do -s 56 10.95.50.12
+PING 10.95.50.12 (10.95.50.12) 56(84) bytes of data.
+64 bytes from 10.95.50.12: icmp_seq=1 ttl=64 time=0.131 ms
+64 bytes from 10.95.50.12: icmp_seq=2 ttl=64 time=0.193 ms
+
+--- 10.95.50.12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1015ms
+rtt min/avg/max/mdev = 0.131/0.162/0.193/0.031 ms
+[exit 0]
+$ art2 ping -n -c 2 -W 1 -M do -s 56 10.95.50.10
+PING 10.95.50.10 (10.95.50.10) 56(84) bytes of data.
+64 bytes from 10.95.50.10: icmp_seq=1 ttl=64 time=0.077 ms
+64 bytes from 10.95.50.10: icmp_seq=2 ttl=64 time=0.222 ms
+
+--- 10.95.50.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1015ms
+rtt min/avg/max/mdev = 0.077/0.149/0.222/0.072 ms
+[exit 0]
+$ art2 ping -n -c 2 -W 1 -M do -s 56 10.95.50.12
+PING 10.95.50.12 (10.95.50.12) 56(84) bytes of data.
+64 bytes from 10.95.50.12: icmp_seq=1 ttl=64 time=0.084 ms
+64 bytes from 10.95.50.12: icmp_seq=2 ttl=64 time=0.165 ms
+
+--- 10.95.50.12 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1016ms
+rtt min/avg/max/mdev = 0.084/0.124/0.165/0.040 ms
+[exit 0]
+$ art3 ping -n -c 2 -W 1 -M do -s 56 10.95.50.10
+PING 10.95.50.10 (10.95.50.10) 56(84) bytes of data.
+64 bytes from 10.95.50.10: icmp_seq=1 ttl=64 time=0.113 ms
+64 bytes from 10.95.50.10: icmp_seq=2 ttl=64 time=0.156 ms
+
+--- 10.95.50.10 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1016ms
+rtt min/avg/max/mdev = 0.113/0.134/0.156/0.021 ms
+[exit 0]
+$ art3 ping -n -c 2 -W 1 -M do -s 56 10.95.50.11
+PING 10.95.50.11 (10.95.50.11) 56(84) bytes of data.
+64 bytes from 10.95.50.11: icmp_seq=1 ttl=64 time=0.029 ms
+64 bytes from 10.95.50.11: icmp_seq=2 ttl=64 time=0.084 ms
+
+--- 10.95.50.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1016ms
+rtt min/avg/max/mdev = 0.029/0.056/0.084/0.027 ms
+[exit 0]
+PASS: every ordered same-tenant VM pair communicated.
+Stopped this experiment network.

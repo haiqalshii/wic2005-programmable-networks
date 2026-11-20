@@ -1,21 +1,38 @@
-Actual laptop-host Docker checks, outside the course container.
-UTC 2026-11-20T08:59:09.743096+00:00
-
-$ timeout 15s docker version
-Client:
- Version:           27.4.0
- API version:       1.47
- Go version:        go1.22.10
- Git commit:        bde2b89
- Built:             Sat Dec  7 10:37:44 2024
- OS/Arch:           linux/amd64
- Context:           default
-[exit 124]
-
-$ timeout 15s docker run --rm --name week6-alpine-probe alpine sh -c 'ip -br link; cat /etc/os-release; ps'
-docker: Get "http://%2Fvar%2Frun%2Fdocker.sock/_ping": context canceled.
-See 'docker run --help'.
-[exit 124]
-
-No successful container inspection is claimed. Exit 124 denotes a time limit.
-If the engine later shows week6-alpine-probe, remove only that container with docker rm -f week6-alpine-probe.
+﻿Actual host Docker Part 7
+Recorded: 2026-11-20T17:32:23.4996228+08:00
+$ docker exec week6-alpine-retry ip -br link
+BusyBox v1.37.0 (2025-11-23 13:10:04 UTC) multi-call binary.
+System.Management.Automation.RemoteException
+Usage: ip [OPTIONS] address|route|link|tunnel|neigh|rule [ARGS]
+System.Management.Automation.RemoteException
+OPTIONS := -f[amily] inet|inet6|link | -o[neline]
+System.Management.Automation.RemoteException
+ip addr add|del IFADDR dev IFACE | show|flush [dev IFACE] [to PREFIX]
+ip route list|flush|add|del|change|append|replace|test ROUTE
+ip link set IFACE [up|down] [arp on|off] [multicast on|off]
+	[promisc on|off] [mtu NUM] [name NAME] [qlen NUM] [address MAC]
+	[master IFACE | nomaster] [netns PID]
+ip tunnel add|change|del|show [NAME]
+	[mode ipip|gre|sit] [remote ADDR] [local ADDR] [ttl TTL]
+ip neigh show|flush [to PREFIX] [dev DEV] [nud STATE]
+ip rule [list] | add|del SELECTOR ACTION
+$ docker exec week6-alpine-retry cat /etc/os-release
+NAME="Alpine Linux"
+ID=alpine
+VERSION_ID=3.21.10
+PRETTY_NAME="Alpine Linux v3.21"
+HOME_URL="https://alpinelinux.org/"
+BUG_REPORT_URL="https://gitlab.alpinelinux.org/alpine/aports/-/issues"
+$ docker exec week6-alpine-retry ps
+PID   USER     TIME  COMMAND
+    1 root      0:00 sleep 300
+   19 root      0:00 ps
+$ docker stop week6-alpine-retry
+week6-alpine-retry
+$ docker ps -a --filter name=week6-alpine-retry
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+`n$ docker run --rm alpine:3.21 ip link show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+21: eth0@if22: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue state UP 
+    link/ether 02:42:ac:11:00:04 brd ff:ff:ff:ff:ff:ff

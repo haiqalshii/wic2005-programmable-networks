@@ -276,7 +276,11 @@ def build(spec):
         for node in [*spec["hypervisors"], *p["vms"]]:
             net.get(node).cmd("sysctl -qw net.ipv6.conf.all.disable_ipv6=1 net.ipv6.conf.default.disable_ipv6=1")
         for hv in spec["hypervisors"]:
-            net.get(hv).cmd(f"ip link set {hv}-eth0 mtu {umtu}")
+            # New kernels cap a VXLAN device's MTU at creation using its lower
+            # device. Allow setup first, then apply the requested underlay MTU
+            # below. This also permits --force receive-MTU experiments.
+            setup_mtu = max(umtu, max(int(t["mtu"]) for t in spec["tenants"]) + VXLAN_OVERHEAD)
+            net.get(hv).cmd(f"ip link set {hv}-eth0 mtu {setup_mtu}")
         for intf in s1.intfList():
             if intf.name != "lo":
                 s1.cmd(f"ip link set {intf.name} mtu {umtu}")
@@ -303,6 +307,8 @@ def build(spec):
                 made = re.match(r"ip link add (\S+) type bridge", c)
                 if made:
                     net.get(hv).cmd(f"ip link set {made.group(1)} type bridge mcast_snooping 0; ip link set {made.group(1)} multicast off")
+        for hv in spec["hypervisors"]:
+            net.get(hv).cmd(f"ip link set {hv}-eth0 mtu {umtu}")
         return net, commands
     except BaseException:
         net.stop()

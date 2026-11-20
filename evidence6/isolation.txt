@@ -1,14 +1,206 @@
-Recorded UTC: 2026-11-20T08:57:46.506169+00:00
+Recorded UTC: 2026-11-20T09:32:06.455695+00:00
 Collector: isolation
 $ python3 build_overlay.py overlay.yaml
-Traceback (most recent call last):
-  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 188, in main
-    actions[name]()
-  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 131, in isolation
-    with session('overlay.yaml') as (net, _):
-  File "/usr/lib/python3.10/contextlib.py", line 135, in __enter__
-    return next(self.gen)
-  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 46, in session
-    raise RuntimeError("BLOCKED: No module named 'mininet'; no network was constructed")
-RuntimeError: BLOCKED: No module named 'mininet'; no network was constructed
-INCOMPLETE: no successful live experiment is claimed.
+VTEP commands on cedar (10.95.0.1):
+  ip link add br9510 type bridge
+  ip link set br9510 mtu 1500 up
+  ip link add vxlan9510 type vxlan id 9510 local 10.95.0.1 dstport 4789 dev cedar-eth0
+  ip link set vxlan9510 master br9510
+  ip link set vxlan9510 mtu 1500 up
+  ip link set cedar-eth1 master br9510
+  ip link set cedar-eth1 mtu 1500 up
+  ip link set cedar-eth2 master br9510
+  ip link set cedar-eth2 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.2
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.3
+  ip link add br9520 type bridge
+  ip link set br9520 mtu 1500 up
+  ip link add vxlan9520 type vxlan id 9520 local 10.95.0.1 dstport 4789 dev cedar-eth0
+  ip link set vxlan9520 master br9520
+  ip link set vxlan9520 mtu 1500 up
+  ip link set cedar-eth3 master br9520
+  ip link set cedar-eth3 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9520 dst 10.95.0.3
+VTEP commands on maple (10.95.0.2):
+  ip link add br9510 type bridge
+  ip link set br9510 mtu 1500 up
+  ip link add vxlan9510 type vxlan id 9510 local 10.95.0.2 dstport 4789 dev maple-eth0
+  ip link set vxlan9510 master br9510
+  ip link set vxlan9510 mtu 1500 up
+  ip link set maple-eth1 master br9510
+  ip link set maple-eth1 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.1
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.3
+VTEP commands on willow (10.95.0.3):
+  ip link add br9510 type bridge
+  ip link set br9510 mtu 1500 up
+  ip link add vxlan9510 type vxlan id 9510 local 10.95.0.3 dstport 4789 dev willow-eth0
+  ip link set vxlan9510 master br9510
+  ip link set vxlan9510 mtu 1500 up
+  ip link set willow-eth1 master br9510
+  ip link set willow-eth1 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.1
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9510 dst 10.95.0.2
+  ip link add br9520 type bridge
+  ip link set br9520 mtu 1500 up
+  ip link add vxlan9520 type vxlan id 9520 local 10.95.0.3 dstport 4789 dev willow-eth0
+  ip link set vxlan9520 master br9520
+  ip link set vxlan9520 mtu 1500 up
+  ip link set willow-eth2 master br9520
+  ip link set willow-eth2 mtu 1500 up
+  ip link set willow-eth3 master br9520
+  ip link set willow-eth3 mtu 1500 up
+  bridge fdb append 00:00:00:00:00:00 dev vxlan9520 dst 10.95.0.1
+Fresh network: {
+  "hypervisors": {
+    "cedar": "10.95.0.1",
+    "maple": "10.95.0.2",
+    "willow": "10.95.0.3"
+  },
+  "vms": {
+    "res1": {
+      "tenant": "research",
+      "vni": 9510,
+      "hv": "cedar",
+      "ip": "10.95.50.10",
+      "prefix": 24,
+      "mac": "02:00:25:26:00:0a"
+    },
+    "res2": {
+      "tenant": "research",
+      "vni": 9510,
+      "hv": "maple",
+      "ip": "10.95.50.11",
+      "prefix": 24,
+      "mac": "02:00:25:26:00:0b"
+    },
+    "res3": {
+      "tenant": "research",
+      "vni": 9510,
+      "hv": "willow",
+      "ip": "10.95.50.12",
+      "prefix": 24,
+      "mac": "02:00:25:26:00:0c"
+    },
+    "res4": {
+      "tenant": "research",
+      "vni": 9510,
+      "hv": "cedar",
+      "ip": "10.95.50.13",
+      "prefix": 24,
+      "mac": "02:00:25:26:00:0d"
+    },
+    "art1": {
+      "tenant": "studio",
+      "vni": 9520,
+      "hv": "cedar",
+      "ip": "10.95.50.10",
+      "prefix": 24,
+      "mac": "02:00:25:30:00:0a"
+    },
+    "art2": {
+      "tenant": "studio",
+      "vni": 9520,
+      "hv": "willow",
+      "ip": "10.95.50.11",
+      "prefix": 24,
+      "mac": "02:00:25:30:00:0b"
+    },
+    "art3": {
+      "tenant": "studio",
+      "vni": 9520,
+      "hv": "willow",
+      "ip": "10.95.50.12",
+      "prefix": 24,
+      "mac": "02:00:25:30:00:0c"
+    }
+  }
+}
+$ art2 tcpdump -l -nn -e -vv -i art2-eth0 'arp or icmp'
+$ res1 ping -n -c 2 -W 1 -M do -s 56 10.95.50.11
+PING 10.95.50.11 (10.95.50.11) 56(84) bytes of data.
+64 bytes from 10.95.50.11: icmp_seq=1 ttl=64 time=0.222 ms
+64 bytes from 10.95.50.11: icmp_seq=2 ttl=64 time=0.257 ms
+
+--- 10.95.50.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1014ms
+rtt min/avg/max/mdev = 0.222/0.239/0.257/0.017 ms
+[exit 0]
+tcpdump: listening on art2-eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+
+0 packets captured
+0 packets received by filter
+0 packets dropped by kernel
+
+PASS: no ARP/ICMP reached the studio VM during research ping.
+$ art1 ping -n -c 2 -W 1 -M do -s 56 10.95.50.11
+PING 10.95.50.11 (10.95.50.11) 56(84) bytes of data.
+64 bytes from 10.95.50.11: icmp_seq=1 ttl=64 time=0.575 ms
+64 bytes from 10.95.50.11: icmp_seq=2 ttl=64 time=0.425 ms
+
+--- 10.95.50.11 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1032ms
+rtt min/avg/max/mdev = 0.425/0.500/0.575/0.075 ms
+[exit 0]
+$ res1 ip neigh show; ip -br link
+10.95.50.11 dev res1-eth0 lladdr 02:00:25:26:00:0b REACHABLE 
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+res1-eth0@if3    UP             02:00:25:26:00:0a <BROADCAST,MULTICAST,UP,LOWER_UP> 
+[exit 0]
+$ res2 ip neigh show; ip -br link
+10.95.50.10 dev res2-eth0 lladdr 02:00:25:26:00:0a DELAY 
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+res2-eth0@if3    UP             02:00:25:26:00:0b <BROADCAST,MULTICAST,UP,LOWER_UP> 
+[exit 0]
+$ art1 ip neigh show; ip -br link
+10.95.50.11 dev art1-eth0 lladdr 02:00:25:30:00:0b REACHABLE 
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+art1-eth0@if5    UP             02:00:25:30:00:0a <BROADCAST,MULTICAST,UP,LOWER_UP> 
+[exit 0]
+$ art2 ip neigh show; ip -br link
+10.95.50.10 dev art2-eth0 lladdr 02:00:25:30:00:0a DELAY 
+lo               UNKNOWN        00:00:00:00:00:00 <LOOPBACK,UP,LOWER_UP> 
+art2-eth0@if4    UP             02:00:25:30:00:0b <BROADCAST,MULTICAST,UP,LOWER_UP> 
+[exit 0]
+$ cedar ip -d link show type vxlan; bridge link show
+7: vxlan9510: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br9510 state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 82:3c:59:2d:c2:cf brd ff:ff:ff:ff:ff:ff promiscuity 1  allmulti 1 minmtu 68 maxmtu 65535 
+    vxlan id 9510 fan-map local 10.95.0.1 dev cedar-eth0 srcport 0 0 dstport 4789 ttl auto ageing 300 udpcsum noudp6zerocsumtx noudp6zerocsumrx 
+    bridge_slave state forwarding priority 32 cost 2 hairpin off guard off root_block off fastleave off learning on flood on port_id 0x8001 port_no 0x1 designated_port 32769 designated_cost 0 designated_bridge 8000.6a:8f:13:aa:6c:2a designated_root 8000.6a:8f:13:aa:6c:2a hold_timer    0.00 message_age_timer    0.00 forward_delay_timer   11.57 topology_change_ack 0 config_pending 0 proxy_arp off proxy_arp_wifi off mcast_router 1 mcast_fast_leave off mcast_flood on bcast_flood on mcast_to_unicast off neigh_suppress off group_fwd_mask 0 group_fwd_mask_str 0x0 vlan_tunnel off isolated off locked off addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 524280 tso_max_segs 65535 gro_max_size 65536 
+9: vxlan9520: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br9520 state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether ae:53:f4:36:d2:2a brd ff:ff:ff:ff:ff:ff promiscuity 1  allmulti 1 minmtu 68 maxmtu 65535 
+    vxlan id 9520 fan-map local 10.95.0.1 dev cedar-eth0 srcport 0 0 dstport 4789 ttl auto ageing 300 udpcsum noudp6zerocsumtx noudp6zerocsumrx 
+    bridge_slave state forwarding priority 32 cost 2 hairpin off guard off root_block off fastleave off learning on flood on port_id 0x8001 port_no 0x1 designated_port 32769 designated_cost 0 designated_bridge 8000.26:ee:93:3:a9:2 designated_root 8000.26:ee:93:3:a9:2 hold_timer    0.00 message_age_timer    0.00 forward_delay_timer   11.64 topology_change_ack 0 config_pending 0 proxy_arp off proxy_arp_wifi off mcast_router 1 mcast_fast_leave off mcast_flood on bcast_flood on mcast_to_unicast off neigh_suppress off group_fwd_mask 0 group_fwd_mask_str 0x0 vlan_tunnel off isolated off locked off addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 524280 tso_max_segs 65535 gro_max_size 65536 
+3: cedar-eth1@cedar-eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9510 state forwarding priority 32 cost 2 
+4: cedar-eth2@cedar-eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9510 state forwarding priority 32 cost 2 
+5: cedar-eth3@cedar-eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9520 state forwarding priority 32 cost 2 
+7: vxlan9510: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9510 state forwarding priority 32 cost 2 
+9: vxlan9520: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9520 state forwarding priority 32 cost 2 
+info: Using default fan map value (33)
+[exit 0]
+$ maple ip -d link show type vxlan; bridge link show
+5: vxlan9510: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br9510 state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether ea:9d:f9:04:2e:44 brd ff:ff:ff:ff:ff:ff promiscuity 1  allmulti 1 minmtu 68 maxmtu 65535 
+    vxlan id 9510 fan-map local 10.95.0.2 dev maple-eth0 srcport 0 0 dstport 4789 ttl auto ageing 300 udpcsum noudp6zerocsumtx noudp6zerocsumrx 
+    bridge_slave state forwarding priority 32 cost 2 hairpin off guard off root_block off fastleave off learning on flood on port_id 0x8001 port_no 0x1 designated_port 32769 designated_cost 0 designated_bridge 8000.ba:f8:4e:30:a6:c9 designated_root 8000.ba:f8:4e:30:a6:c9 hold_timer    0.00 message_age_timer    0.00 forward_delay_timer   11.68 topology_change_ack 0 config_pending 0 proxy_arp off proxy_arp_wifi off mcast_router 1 mcast_fast_leave off mcast_flood on bcast_flood on mcast_to_unicast off neigh_suppress off group_fwd_mask 0 group_fwd_mask_str 0x0 vlan_tunnel off isolated off locked off addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 524280 tso_max_segs 65535 gro_max_size 65536 
+3: maple-eth1@maple-eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9510 state forwarding priority 32 cost 2 
+5: vxlan9510: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9510 state forwarding priority 32 cost 2 
+info: Using default fan map value (33)
+[exit 0]
+$ willow ip -d link show type vxlan; bridge link show
+7: vxlan9510: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br9510 state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 32:75:01:a3:74:5c brd ff:ff:ff:ff:ff:ff promiscuity 1  allmulti 1 minmtu 68 maxmtu 65535 
+    vxlan id 9510 fan-map local 10.95.0.3 dev willow-eth0 srcport 0 0 dstport 4789 ttl auto ageing 300 udpcsum noudp6zerocsumtx noudp6zerocsumrx 
+    bridge_slave state forwarding priority 32 cost 2 hairpin off guard off root_block off fastleave off learning on flood on port_id 0x8001 port_no 0x1 designated_port 32769 designated_cost 0 designated_bridge 8000.32:75:1:a3:74:5c designated_root 8000.32:75:1:a3:74:5c hold_timer    0.00 message_age_timer    0.00 forward_delay_timer   11.73 topology_change_ack 0 config_pending 0 proxy_arp off proxy_arp_wifi off mcast_router 1 mcast_fast_leave off mcast_flood on bcast_flood on mcast_to_unicast off neigh_suppress off group_fwd_mask 0 group_fwd_mask_str 0x0 vlan_tunnel off isolated off locked off addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 524280 tso_max_segs 65535 gro_max_size 65536 
+9: vxlan9520: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br9520 state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 36:c0:d0:1d:19:59 brd ff:ff:ff:ff:ff:ff promiscuity 1  allmulti 1 minmtu 68 maxmtu 65535 
+    vxlan id 9520 fan-map local 10.95.0.3 dev willow-eth0 srcport 0 0 dstport 4789 ttl auto ageing 300 udpcsum noudp6zerocsumtx noudp6zerocsumrx 
+    bridge_slave state forwarding priority 32 cost 2 hairpin off guard off root_block off fastleave off learning on flood on port_id 0x8001 port_no 0x1 designated_port 32769 designated_cost 0 designated_bridge 8000.36:c0:d0:1d:19:59 designated_root 8000.36:c0:d0:1d:19:59 hold_timer    0.00 message_age_timer    0.00 forward_delay_timer   11.78 topology_change_ack 0 config_pending 0 proxy_arp off proxy_arp_wifi off mcast_router 1 mcast_fast_leave off mcast_flood on bcast_flood on mcast_to_unicast off neigh_suppress off group_fwd_mask 0 group_fwd_mask_str 0x0 vlan_tunnel off isolated off locked off addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 524280 tso_max_segs 65535 gro_max_size 65536 
+3: willow-eth1@willow-eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9510 state forwarding priority 32 cost 2 
+4: willow-eth2@willow-eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9520 state forwarding priority 32 cost 2 
+5: willow-eth3@willow-eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9520 state forwarding priority 32 cost 2 
+7: vxlan9510: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9510 state forwarding priority 32 cost 2 
+9: vxlan9520: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master br9520 state forwarding priority 32 cost 2 
+info: Using default fan map value (33)
+[exit 0]
+Stopped this experiment network.
