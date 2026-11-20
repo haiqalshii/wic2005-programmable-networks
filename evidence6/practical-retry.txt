@@ -1,0 +1,13 @@
+﻿Week 6 practical retry — actual host diagnostic
+Recorded: 2026-11-20T17:25:07.8303615+08:00
+
+Docker Desktop was started using Start-Process with WindowStyle Hidden.
+docker ps -a: Docker Linux engine named pipe was missing.
+docker info: Internal Server Error from the Docker Desktop Linux engine.
+
+Actual Docker Desktop backend diagnostic:
+[2026-11-20T09:24:43.985063400Z][com.docker.backend.exe.ipc] (4d29abdc) ae53c90f-ErrorReportAPI S->C Docker-Desktop/4.37.1 (Windows; x64) GET /error (538.1µs): {"actions":["Quit"],"allowDiagnostics":true,"error":"bootstrapping in the main distro: listing WSL distros: running WSL command wsl.exe C:\\WINDOWS\\System32\\wsl.exe -l -v --all: context deadline exceeded","message":"An unexpected error occurred while executing a WSL command. \n\nEither shut down WSL down with `wsl --shutdown`, and/or reboot your machine. You can also try reinstalling WSL and/or Docker Desktop. If the issue persists, [collect diagnostics and submit an issue](https://docs.docker.com/desktop/troubleshoot/overview/#diagnose-from-the-terminal).","title":"Docker Desktop - Unexpected WSL error","unhandled":false}
+
+Result: no course container or Alpine container could be started; no networking measurements obtained.
+WSL shutdown/reboot was not performed because it would affect host sessions.
+Existing experiment logs and published answers remain unchanged.

@@ -4,6 +4,8 @@ Run from this repository root (the course's `netlab` working directory). The dow
 
 ## Recorded status
 
+A subsequent Windows-host retry started Docker Desktop, but the engine failed during WSL startup: listing distributions with `wsl.exe -l -v --all` exceeded its deadline. The actual backend diagnostic is preserved in `evidence6/practical-retry.txt`. No course or Alpine container was started and no additional packet measurements were obtained. Recover Docker Desktop/WSL on the laptop before running the commands below. A host-wide WSL shutdown or reboot was not performed during this attempt because it could interrupt unrelated sessions.
+
 This execution environment is an unprivileged WSL shell without the Mininet Python package. Its sandbox also denies network-interface inspection. Docker Desktop returned an engine error and the native Docker connection timed out. See `evidence6/environment.txt`, `evidence6/docker.txt`, and the experiment logs. Parts 1–7 and D5 packet delivery, captures, MTU boundaries, and receiver throughput are **unmeasured**. The dependency errors are real output, not substitutes for a successful experiment. No bandwidth values are asserted.
 
 The available instructions are the four starters and the task. There is no separate Week 6 handout, exact five lab wrap-up prompts, Week 5 implementation, or `vtep.p4` in the checkout or available Git history. README answers cover five relevant wrap-up topics, explicitly subject to this limitation.
