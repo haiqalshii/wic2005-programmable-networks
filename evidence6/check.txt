@@ -1,0 +1,7 @@
+Actual local command output; UTC 2026-11-20T08:58:12.641777+00:00
+
+$ python3 build_overlay.py blackhole.yaml
+PROBLEM: tenant research: MTU 1500 + VXLAN overhead 50 = 1550 exceeds underlay MTU 1500 by 50 bytes
+PROBLEM: tenant studio: MTU 1500 + VXLAN overhead 50 = 1550 exceeds underlay MTU 1500 by 50 bytes
+Fix the design and try again: nothing was built.
+[exit 1]

@@ -1,0 +1,24 @@
+Actual local command output; UTC 2026-11-20T08:58:13.232268+00:00
+
+$ id
+uid=1000(fidelismeee) gid=1000(fidelismeee) groups=1000(fidelismeee),65534(nogroup)
+[exit 0]
+
+$ uname -sr
+Linux 6.18.58.1-microsoft-standard-WSL2
+[exit 0]
+
+$ lsns -t net -o NS,TYPE,NPROCS,PID,USER
+        NS TYPE NPROCS PID USER
+4026532509 net       4   1 fidelismeee
+[exit 0]
+
+$ ip -br link
+Cannot open netlink socket: Operation not permitted
+[exit 1]
+
+$ python3 -c 'import mininet'
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ModuleNotFoundError: No module named 'mininet'
+[exit 1]

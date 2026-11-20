@@ -1,0 +1,18 @@
+Recorded UTC: 2026-11-20T08:57:46.534666+00:00
+Collector: fixes
+Requested Fix A is tested as specified, without bypassing validation:
+PROBLEM: tenant research: MTU 1950 + VXLAN overhead 50 = 2000 exceeds underlay MTU 1500 by 500 bytes
+PROBLEM: tenant studio: MTU 1950 + VXLAN overhead 50 = 2000 exceeds underlay MTU 1500 by 500 bytes
+It is invalid; only the corrected reduced-MTU alternative and Fix B are built below.
+$ python3 build_overlay.py mtu_a_reduced.yaml
+Traceback (most recent call last):
+  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 188, in main
+    actions[name]()
+  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 169, in fixes
+    with session(path) as (net, _):
+  File "/usr/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 46, in session
+    raise RuntimeError("BLOCKED: No module named 'mininet'; no network was constructed")
+RuntimeError: BLOCKED: No module named 'mininet'; no network was constructed
+INCOMPLETE: no successful live experiment is claimed.

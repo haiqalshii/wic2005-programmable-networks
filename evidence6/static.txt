@@ -1,0 +1,26 @@
+Actual checks, UTC 2026-11-20T09:07:58.453239+00:00
+
+$ python3 -m unittest discover -s tests -v
+test_addresses_macs_and_overlap (test_week6.OverlayTests) ... ok
+test_design_variants (test_week6.OverlayTests) ... ok
+test_force_bypasses_only_mtu (test_week6.OverlayTests) ... ok
+test_generalised_renamed_design (test_week6.OverlayTests) ... ok
+test_membership_and_flood_peers (test_week6.OverlayTests) ... ok
+test_mtu_exact_boundary_and_one_byte_over (test_week6.OverlayTests) ... ok
+test_rejection_precedes_mininet_import (test_week6.OverlayTests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.165s
+
+OK
+[exit 0]
+
+$ python3 -m py_compile build_overlay.py make_page6.py run_week6_experiments.py
+[exit 0]
+
+$ python3 build_overlay.py overlay.yaml
+Cannot build the network: No module named 'mininet'. Run inside the privileged course container.
+[exit 1]
+
+PASS: previous coursework byte hashes unchanged; original README prefix unchanged.
+PASS: six Week 6 YAML files parse; blackhole.yaml matches initial design commit byte-for-byte.

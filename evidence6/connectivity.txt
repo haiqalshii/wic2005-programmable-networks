@@ -1,0 +1,14 @@
+Recorded UTC: 2026-11-20T09:02:43.619413+00:00
+Collector: connectivity
+$ python3 build_overlay.py overlay.yaml
+Traceback (most recent call last):
+  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 199, in main
+    actions[name]()
+  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 120, in connectivity
+    with session('overlay.yaml') as (net, spec):
+  File "/usr/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/mnt/c/Users/faris/Documents/Haiqal-Prog/wic2005-programmable-networks/run_week6_experiments.py", line 46, in session
+    raise RuntimeError("BLOCKED: No module named 'mininet'; no network was constructed")
+RuntimeError: BLOCKED: No module named 'mininet'; no network was constructed
+INCOMPLETE: no successful live experiment is claimed.

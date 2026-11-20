@@ -256,50 +256,57 @@ def build(spec):
     underlay = ipaddress.ip_network(spec["underlay"]["network"])
     umtu = int(spec["underlay"]["mtu"])
     net = Mininet(controller=None, switch=LinuxBridge)
-    s1 = net.addSwitch("s1")
-    for hv in spec["hypervisors"]:
-        net.addHost(hv, ip=None)
-    for vm in p["vms"]:
-        net.addHost(vm, ip=None)
-    for hv in spec["hypervisors"]:
-        net.addLink(hv, s1, params1={"ip": f"{p['hypervisors'][hv]}/{underlay.prefixlen}"})
-    mtu_of = {}
-    for t in spec["tenants"]:
-        for vm, hv in t["vms"]:
-            v = p["vms"][vm]
-            net.addLink(hv, vm, params2={"ip": f"{v['ip']}/{v['prefix']}"})
-            mtu_of[vm] = int(t["mtu"])
-    net.start()
+    try:
+        s1 = net.addSwitch("s1")
+        for hv in spec["hypervisors"]:
+            net.addHost(hv, ip=None)
+        for vm in p["vms"]:
+            net.addHost(vm, ip=None)
+        for hv in spec["hypervisors"]:
+            net.addLink(hv, s1, params1={"ip": f"{p['hypervisors'][hv]}/{underlay.prefixlen}"})
+        mtu_of = {}
+        for t in spec["tenants"]:
+            for vm, hv in t["vms"]:
+                v = p["vms"][vm]
+                net.addLink(hv, vm, params2={"ip": f"{v['ip']}/{v['prefix']}"})
+                mtu_of[vm] = int(t["mtu"])
+        net.start()
 
-    # Keep IPv6 housekeeping out of the overlay, so the evidence shows only what you send.
-    for node in [*spec["hypervisors"], *p["vms"]]:
-        net.get(node).cmd("sysctl -qw net.ipv6.conf.all.disable_ipv6=1 net.ipv6.conf.default.disable_ipv6=1")
-    for hv in spec["hypervisors"]:
-        net.get(hv).cmd(f"ip link set {hv}-eth0 mtu {umtu}")
-    for intf in s1.intfList():
-        if intf.name != "lo":
-            s1.cmd(f"ip link set {intf.name} mtu {umtu}")
-    for hv in spec["hypervisors"]:
-        for vm, port in vm_ports(spec, hv).items():
-            net.get(hv).cmd(f"ip link set {port} mtu {mtu_of[vm]}")
-            v = p["vms"][vm]
-            net.get(vm).cmd(f"ip link set {vm}-eth0 down; ip link set {vm}-eth0 address {v['mac']} mtu {mtu_of[vm]}; ip link set {vm}-eth0 up")
-            err = net.get(vm).cmd(f"python3 -c {shlex.quote(NO_OFFLOAD)} {vm}-eth0").strip()
-            if err:
-                print(f"WARNING: couldn't turn off offload on {vm}: {err}")
+        # Keep IPv6 housekeeping out of the overlay, so the evidence shows only what you send.
+        for node in [*spec["hypervisors"], *p["vms"]]:
+            net.get(node).cmd("sysctl -qw net.ipv6.conf.all.disable_ipv6=1 net.ipv6.conf.default.disable_ipv6=1")
+        for hv in spec["hypervisors"]:
+            net.get(hv).cmd(f"ip link set {hv}-eth0 mtu {umtu}")
+        for intf in s1.intfList():
+            if intf.name != "lo":
+                s1.cmd(f"ip link set {intf.name} mtu {umtu}")
+        for hv in spec["hypervisors"]:
+            for vm, port in vm_ports(spec, hv).items():
+                net.get(hv).cmd(f"ip link set {port} mtu {mtu_of[vm]}")
+                v = p["vms"][vm]
+                net.get(vm).cmd(f"ip link set {vm}-eth0 down; ip link set {vm}-eth0 address {v['mac']} mtu {mtu_of[vm]}; ip link set {vm}-eth0 up")
+                err = net.get(vm).cmd(f"python3 -c {shlex.quote(NO_OFFLOAD)} {vm}-eth0").strip()
+                if err:
+                    print(f"WARNING: couldn't turn off offload on {vm}: {err}")
 
-    commands = all_commands(spec)
-    for hv, cmds in commands.items():
-        print(f"VTEP commands on {hv} ({p['hypervisors'][hv]}):")
-        for c in cmds:
-            print(f"  {c}")
-            out = net.get(hv).cmd(c).strip()
-            if out:
-                print(f"      {out}")
-            made = re.match(r"ip link add (\S+) type bridge", c)
-            if made:
-                net.get(hv).cmd(f"ip link set {made.group(1)} type bridge mcast_snooping 0; ip link set {made.group(1)} multicast off")
-    return net, commands
+        commands = all_commands(spec)
+        for hv, cmds in commands.items():
+            print(f"VTEP commands on {hv} ({p['hypervisors'][hv]}):")
+            for c in cmds:
+                print(f"  {c}")
+                stdout, stderr, status = net.get(hv).pexec("sh", "-c", c)
+                out = (stdout + stderr).strip()
+                if out:
+                    print(f"      {out}")
+                if status:
+                    raise RuntimeError(f"{hv}: command failed (exit {status}): {c}")
+                made = re.match(r"ip link add (\S+) type bridge", c)
+                if made:
+                    net.get(hv).cmd(f"ip link set {made.group(1)} type bridge mcast_snooping 0; ip link set {made.group(1)} multicast off")
+        return net, commands
+    except BaseException:
+        net.stop()
+        raise
 
 
 def problems_for(spec, force):

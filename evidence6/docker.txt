@@ -1,0 +1,21 @@
+Actual laptop-host Docker checks, outside the course container.
+UTC 2026-11-20T08:59:09.743096+00:00
+
+$ timeout 15s docker version
+Client:
+ Version:           27.4.0
+ API version:       1.47
+ Go version:        go1.22.10
+ Git commit:        bde2b89
+ Built:             Sat Dec  7 10:37:44 2024
+ OS/Arch:           linux/amd64
+ Context:           default
+[exit 124]
+
+$ timeout 15s docker run --rm --name week6-alpine-probe alpine sh -c 'ip -br link; cat /etc/os-release; ps'
+docker: Get "http://%2Fvar%2Frun%2Fdocker.sock/_ping": context canceled.
+See 'docker run --help'.
+[exit 124]
+
+No successful container inspection is claimed. Exit 124 denotes a time limit.
+If the engine later shows week6-alpine-probe, remove only that container with docker rm -f week6-alpine-probe.
