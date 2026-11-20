@@ -15,14 +15,13 @@
 #   - at least one hypervisor hosting VMs of two tenants;
 #   - names: a-z and 0-9, starting with a letter, at most 8 characters.
 #
-# Initial design: all MTUs are 1500, deliberately invalid for IPv4 VXLAN.
-# blackhole.yaml preserves this initial configuration exactly.
+# Fix B: jumbo underlay, standard tenant MTU; selected final design.
 
 student_id_last4: "1995"
 
 underlay:
   network: 10.95.0.0/24
-  mtu: 1500
+  mtu: 9000
 
 hypervisors: [cedar, maple, willow]
 
