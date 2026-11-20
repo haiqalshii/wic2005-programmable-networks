@@ -4,9 +4,15 @@ Run from this repository root (the course's `netlab` working directory). The dow
 
 ## Recorded status
 
-A subsequent Windows-host retry started Docker Desktop, but the engine failed during WSL startup: listing distributions with `wsl.exe -l -v --all` exceeded its deadline. The actual backend diagnostic is preserved in `evidence6/practical-retry.txt`. No course or Alpine container was started and no additional packet measurements were obtained. Recover Docker Desktop/WSL on the laptop before running the commands below. A host-wide WSL shutdown or reboot was not performed during this attempt because it could interrupt unrelated sessions.
+Live experiments completed in disposable Docker containers on 20 November 2026. All 18 ordered same-tenant VM pairs passed; the overlapping-address isolation capture contained zero ARP/ICMP packets at the other tenant, and willow captured the initial VNI 9510 ARP flood. Raw output is in `evidence6/connectivity.txt`, `isolation.txt` and `flood.txt`.
 
-This execution environment is an unprivileged WSL shell without the Mininet Python package. Its sandbox also denies network-interface inspection. Docker Desktop returned an engine error and the native Docker connection timed out. See `evidence6/environment.txt`, `evidence6/docker.txt`, and the experiment logs. Parts 1–7 and D5 packet delivery, captures, MTU boundaries, and receiver throughput are **unmeasured**. The dependency errors are real output, not substitutes for a successful experiment. No bandwidth values are asserted.
+The corrected 1450/1500 fix passed payload 1422 and rejected 1423, receiving 1.346 Gbit/s. The selected 1500/9000 fix passed 1472 and rejected 1473, receiving 1.413 Gbit/s. The forced all-1500 design had a measured 1422/1423 boundary but TCP still received 1.342 Gbit/s after path-MTU adaptation. A persistent TCP failure is therefore not claimed for that configuration.
+
+Parts 1–6 are recorded in `evidence6/lab.txt`: namespace/veth inspection, manual red/blue bridge ping, IPv4 VXLAN capture, IPv6 underlay connectivity and MTU checks. Underlay/overlay receiver rates were 2.642/1.795 Gbit/s. Reducing only the receiving underlay to 1400 produced a 1326/1327 boundary, 29 additional receive drops and a JSON receiver rate of zero; restoring 1500 restored ping. The four-byte receive tolerance is specific to this tested virtual path. The initial oversized 1423-byte lab probe had partial success before a local PMTU error. Single-run software throughput values are not a controlled performance ranking.
+
+Part 7 inspected Alpine Linux 3.21, its interface and processes, then removed the temporary container (`evidence6/docker.txt`). BusyBox lacks `ip -br`; `ip link show` completed the inspection. Initial Docker startup failures and the kernel MTU setup rejection are retained as historical diagnostics. Setup now uses temporary underlay headroom before restoring the requested MTU. Previous coursework is unchanged.
+
+Run `python3 run_week6_lab.py` for Parts 1–6 inside a fresh privileged course container; it writes `evidence6/lab.txt`. Part 7 runs on the laptop host. The procedures below remain available for interactive reproduction.
 
 The available instructions are the four starters and the task. There is no separate Week 6 handout, exact five lab wrap-up prompts, Week 5 implementation, or `vtep.p4` in the checkout or available Git history. README answers cover five relevant wrap-up topics, explicitly subject to this limitation.
 
@@ -187,9 +193,9 @@ python3 run_week6_experiments.py connectivity
 
 Each collector action constructs and stops its own network. `blackhole` is equivalent to `python3 build_overlay.py blackhole.yaml --force`. It scans payloads 1400–1473 and reports measured successes and failures within that range. Extend the range if it does not bracket a stable boundary. It deliberately does not bypass structural validation. The original all-1500 YAML is byte-for-byte the initial design, recoverable from the design commit.
 
-Flooding captures at willow while res1 on cedar communicates with res2 on maple. Isolation captures at art2 (`10.95.50.11`, studio) while research res1 contacts research res2 at the same address. The subsequent studio test checks its own separate neighbour mapping. Inspect the log for failures before continuing. The collector checks capture readiness, checks zero captured ARP/ICMP on the other tenant, and stops on unexpected errors. The live collector is syntax-checked but unverified on Mininet in this environment.
+Flooding captures at willow while res1 on cedar communicates with res2 on maple. Isolation captures at art2 (`10.95.50.11`, studio) while research res1 contacts research res2 at the same address. The subsequent studio test checks its own separate neighbour mapping. Inspect the log for failures before continuing. The collector checks capture readiness, checks zero captured ARP/ICMP on the other tenant, and stops on unexpected errors. The live collector has now completed on the course image.
 
-The connectivity collector tests every ordered same-tenant pair in a fresh network and writes `evidence6/connectivity.txt`. For interactive confirmation, use a fresh `python3 build_overlay.py overlay.yaml` CLI session to ping **every distinct ordered VM pair within each tenant** (res1/res2/res3/res4 at .10/.11/.12/.13; art1/art2/art3 at .10/.11/.12). This covers both same-hypervisor and remote paths. Never use overlapping-address `pingall`. Exit the CLI afterward. Full-mesh same-tenant testing and runtime isolation remain pending here.
+The connectivity collector tests every ordered same-tenant pair in a fresh network and writes `evidence6/connectivity.txt`. For interactive confirmation, use a fresh `python3 build_overlay.py overlay.yaml` CLI session to ping **every distinct ordered VM pair within each tenant** (res1/res2/res3/res4 at .10/.11/.12/.13; art1/art2/art3 at .10/.11/.12). This covers both same-hypervisor and remote paths. Never use overlapping-address `pingall`. Exit the CLI afterward. Full-mesh same-tenant testing and runtime isolation both passed.
 
 MTU configurations:
 
@@ -200,7 +206,7 @@ MTU configurations:
 | mtu_a_reduced.yaml | 1450 / 1500 | Pass | Valid reduced-MTU alternative; ping payloads 1422 and 1423 |
 | mtu_b.yaml and overlay.yaml | 1500 / 9000 | Pass | Selected jumbo underlay; ping payloads 1472 and 1473 |
 
-Fix B preserves guest MTU 1500 but requires every fabric port and path to carry at least 1550 IP bytes (9000 is the configured headroom). Corrected Fix A works with a conventional underlay but requires changing all guest/tenant interfaces and transports 50 fewer payload bytes per full IP packet. No throughput ranking is available until genuine measurements are obtained; software scheduling, CPU load, offloads and packet rate affect Mininet iperf results.
+Fix B preserves guest MTU 1500 but requires every fabric port and path to carry at least 1550 IP bytes (9000 is the configured headroom). Corrected Fix A works with a conventional underlay but requires changing all guest/tenant interfaces and transports 50 fewer payload bytes per full IP packet. The recorded single-run rates do not establish a general throughput ranking; software scheduling, CPU load, offloads and packet rate affect Mininet iperf results.
 
 After collecting real output, revise the measurement-dependent answers in `page6.yaml` and the README, then regenerate and validate:
 

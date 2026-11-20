@@ -3,43 +3,132 @@
 # Leave a blank line between paragraphs. Don't put your name or your full student ID in this file.
 
 repository: https://github.com/haiqalshii/wic2005-programmable-networks
-
-execution_status: "Static validation passed. Live Mininet and Docker experiments are blocked in this environment; captures, connectivity and throughput remain unverified."
-
+execution_status: Live Docker/Mininet experiments completed on 20 November 2026. Connectivity, isolation,
+  flooding and MTU limits measured; Week 5 P4 source remains unavailable.
 answers:
   design:
-    question: "Describe your design: hypervisors, tenants, VNIs and addresses. Which tenants overlap, and why did you place each VM where you did?"
-    answer: |
-      The design uses cedar, maple and willow at 10.95.0.1, 10.95.0.2 and 10.95.0.3 on underlay 10.95.0.0/24. Research uses VNI 9510: res1 and res4 are on cedar, res2 is on maple, and res3 is on willow. Studio uses VNI 9520: art1 is on cedar, and art2 and art3 are on willow. Both tenants use 10.95.50.0/24, with .10 onward assigned in YAML order. Their MAC prefixes are 02:00:25:26:00 and 02:00:25:30:00 respectively. This placement exercises local switching, remote forwarding, shared hypervisors and three-way flooding.
+    question: 'Describe your design: hypervisors, tenants, VNIs and addresses. Which tenants overlap,
+      and why did you place each VM where you did?'
+    answer: 'The design uses cedar, maple and willow at 10.95.0.1, 10.95.0.2 and 10.95.0.3 on underlay
+      10.95.0.0/24. Research uses VNI 9510: res1 and res4 are on cedar, res2 is on maple, and res3 is
+      on willow. Studio uses VNI 9520: art1 is on cedar, and art2 and art3 are on willow. Both tenants
+      use 10.95.50.0/24, with .10 onward assigned in YAML order. Their MAC prefixes are 02:00:25:26:00
+      and 02:00:25:30:00 respectively. This placement exercises local switching, remote forwarding, shared
+      hypervisors and three-way flooding.
 
-      Each hypervisor has a separate bridge and VXLAN interface for each resident tenant. A VXLAN device has a local underlay address and no fixed remote; its all-zero-MAC flood entries identify only the other hypervisors hosting that VNI. The underlay transports outer IPv4/UDP packets, while guest Ethernet and IP addresses remain inside the VXLAN payload. The final tenant MTU is 1500 and underlay MTU is 9000. Automated validation passes, including address, placement, unique MAC, bridge membership and flood-peer checks. Runtime packet delivery is unverified because Mininet is absent and Docker is unavailable; evidence files explicitly record these limitations.
+
+      Each hypervisor has a separate bridge and VXLAN interface for each resident tenant. A VXLAN device
+      has a local underlay address and no fixed remote; its all-zero-MAC flood entries identify only the
+      other hypervisors hosting that VNI. The underlay transports outer IPv4/UDP packets, while guest
+      Ethernet and IP addresses remain inside the VXLAN payload. The final tenant MTU is 1500 and underlay
+      MTU is 9000. Automated validation passes, including address, placement, unique MAC, bridge membership
+      and flood-peer checks. All 18 ordered same-tenant VM pairs passed in evidence6/connectivity.txt,
+      covering both local and remote paths.'
   isolation:
-    question: "Two of your VMs have the same IP address. Using your evidence, explain how a ping reaches the right one — and what would have to go wrong for one tenant to see another's traffic."
-    answer: |
-      Research res2 and studio art2 both have address 10.95.50.11. Their MAC addresses differ: 02:00:25:26:00:0b and 02:00:25:30:00:0b. Res1's ARP request belongs to bridge br9510 and VXLAN VNI 9510, so it is replicated only to the research VTEPs. A reply from res2 should populate res1's neighbour table with the research MAC. Art1's independent ARP resolution should instead find the studio MAC over VNI 9520. Hypervisors maintain separate bridge forwarding domains, and receiving VTEPs demultiplex VXLAN traffic by VNI.
+    question: Two of your VMs have the same IP address. Using your evidence, explain how a ping reaches
+      the right one — and what would have to go wrong for one tenant to see another's traffic.
+    answer: 'Research res2 and studio art2 both have address 10.95.50.11. Their MAC addresses differ:
+      02:00:25:26:00:0b and 02:00:25:30:00:0b. Res1''s ARP request belongs to bridge br9510 and VXLAN
+      VNI 9510, so it is replicated only to the research VTEPs. A reply from res2 should populate res1''s
+      neighbour table with the research MAC. Art1''s independent ARP resolution should instead find the
+      studio MAC over VNI 9520. Hypervisors maintain separate bridge forwarding domains, and receiving
+      VTEPs demultiplex VXLAN traffic by VNI.
 
-      The isolation collector captures ARP/ICMP at art2 while res1 pings res2, then checks studio communication and neighbour tables. evidence6/isolation.txt contains a genuine dependency failure, not a zero-packet capture or a successful isolation result. Therefore isolation is supported by the validated configuration but has not been demonstrated experimentally here. Incorrect bridge membership, mapping both tenants into one VNI, or an intentionally connected tenant gateway could defeat the intended separation. VNI separation is not encryption or authentication; the underlay must also be trusted and controlled.
+
+      The live capture at art2 recorded zero ARP/ICMP packets while res1 successfully pinged research
+      res2. Studio art1 then successfully pinged studio art2. Neighbour tables resolved the overlapping
+      destination to the distinct research and studio MACs. evidence6/isolation.txt records the capture,
+      pings and tables. Separate VNIs and bridge membership therefore isolated this tested traffic. Incorrect
+      bridge membership or VNI assignment could break isolation; VNI separation does not provide encryption
+      or authentication.'
   flood_learn:
-    question: "Using your evidence, explain what was flooded, to which hypervisors, and what each VTEP learned. With 50 hypervisors in one VNI, how many copies would one broadcast need — and how would EVPN change that?"
-    answer: |
-      Initially, each research VXLAN device has two static all-zero-MAC flood entries, one for each other research hypervisor. Studio devices have one remote flood entry each because studio occupies only cedar and willow. These entries are replication destinations, not learned guest MAC mappings. An initial research ARP broadcast from res1 should be copied from cedar to maple and willow; the collector captures at willow, which hosts neither of the communicating res1/res2 pair. Each receiving bridge can learn the source MAC on its VXLAN port, and the VXLAN FDB can associate that source MAC with the originating remote VTEP address. Replies allow cedar to learn the destination's remote mapping, enabling later unicast without unknown-destination flooding.
+    question: Using your evidence, explain what was flooded, to which hypervisors, and what each VTEP
+      learned. With 50 hypervisors in one VNI, how many copies would one broadcast need — and how would
+      EVPN change that?
+    answer: 'Initially, each research VXLAN device has two static all-zero-MAC flood entries, one for
+      each other research hypervisor. Studio devices have one remote flood entry each because studio occupies
+      only cedar and willow. These entries are replication destinations, not learned guest MAC mappings.
+      An initial research ARP broadcast from res1 should be copied from cedar to maple and willow; the
+      collector captures at willow, which hosts neither of the communicating res1/res2 pair. Each receiving
+      bridge can learn the source MAC on its VXLAN port, and the VXLAN FDB can associate that source MAC
+      with the originating remote VTEP address. Replies allow cedar to learn the destination''s remote
+      mapping, enabling later unicast without unknown-destination flooding.
 
-      The before/after tables and packet trace remain unmeasured: evidence6/flood.txt records that Mininet could not be imported. They must not be interpreted as observed learning. With 50 hypervisors hosting one VNI, ingress replication sends 49 copies of one broadcast. EVPN advertises MAC/IP reachability and VTEP membership through BGP, allowing remote unicast forwarding entries to be installed through the control plane. ARP suppression can reduce address-resolution broadcasts, but EVPN does not eliminate all broadcast, unknown-unicast and multicast traffic.
+
+      evidence6/flood.txt contains the actual initial flood entries, a VXLAN VNI 9510 ARP request captured
+      at willow, and learned mappings after successful res1/res2 ping. Willow learned res1 MAC 02:00:25:26:00:0a
+      at VTEP 10.95.0.1; cedar learned res2 at 10.95.0.2. Only the initial broadcast reached the observer
+      in this capture. With 50 participating hypervisors, ingress replication needs 49 copies per broadcast.
+      EVPN distributes remote MAC/IP reachability through BGP and can suppress some ARP flooding, although
+      broadcast/multicast replication remains necessary.'
   mtu:
-    question: "Compare your two MTU fixes using your measurements. Which would you choose for a data centre, what does each cost, and who has to change what?"
-    answer: |
-      The original all-1500 design is preserved in blackhole.yaml. check_mtu() rejects both tenants because 1500 + 50 = 1550 exceeds the underlay by 50 bytes; evidence6/check.txt contains the actual diagnostics. IPv4 VXLAN adds 14 bytes of inner Ethernet, 8 VXLAN, 8 UDP and 20 outer IPv4. Outer Ethernet is outside the underlay IP MTU budget. IPv6 would replace the 20-byte outer header with 40 bytes, giving 70 bytes of overhead, but the assignment builder is IPv4-only.
+    question: Compare your two MTU fixes using your measurements. Which would you choose for a data centre,
+      what does each cost, and who has to change what?
+    answer: 'The original 1500/1500 design is rejected by 50 bytes per tenant: 1500 + 50 = 1550. IPv4
+      VXLAN adds inner Ethernet 14, VXLAN 8, UDP 8 and outer IPv4 20 bytes beyond the inner IP packet.
+      IPv6 increases this to 70 bytes. The live IPv6 tunnel initially had MTU 1430; payload 1402 succeeded
+      and 1403 was rejected locally.
 
-      The requested Fix A, tenant 1950 with underlay 1500, is not a valid fix: it exceeds the budget by 500 bytes. mtu_a.yaml intentionally preserves that specification and is rejected. The corrected reduced-MTU alternative is mtu_a_reduced.yaml, tenant 1450 with underlay 1500. Its IPv4 ICMP payload boundary is predicted to be 1422/1423 bytes because the inner IPv4 and ICMP headers total 28 bytes. Fix B, mtu_b.yaml, keeps tenant MTU 1500 and raises the underlay to 9000; its guest-interface boundary is predicted to be 1472/1473. Both corrected alternatives pass static validation. These are calculated boundaries, not observed ping outcomes.
 
-      A mismatch may allow small packets and TCP handshakes while dropping larger frames or full TCP segments. Inner DF does not by itself establish the outer fragmentation policy, and virtual links may show offload or receive-tolerance effects, so packet captures and drop-counter deltas are necessary. evidence6/blackhole.txt and evidence6/fixes.txt show blocked execution, with no measured maximum payload or receiver throughput. The seven-part lab's possible four-byte Linux receive tolerance is a hypothesis, not a result.
+      The specified Fix A (tenant 1950, underlay 1500) is invalid by 500 bytes, so mtu_a.yaml remains
+      a rejected case. The corrected reduced alternative uses 1450/1500: payload 1422 succeeded and 1423
+      failed. Its receiver throughput was 1.346 Gbit/s. Fix B uses 1500/9000: payload 1472 succeeded and
+      1473 failed; receiver throughput was 1.413 Gbit/s. evidence6/fixes.txt contains raw client/server
+      JSON. These single software-host measurements are illustrative, not a statistically established
+      performance ranking.
 
-      I select Fix B for a managed data-centre fabric: it preserves conventional guest MTU and provides encapsulation headroom, provided every underlay link supports the configured jumbo MTU. The reduced alternative avoids changing the fabric but requires every guest and tenant interface to use 1450, reducing per-packet payload. No measured performance advantage is claimed. Mininet throughput would also depend on CPU load, scheduling, packet rate and offload state, so actual receiver rates and retransmissions must be collected before comparing performance.
+
+      The forced all-1500 assignment network passed small pings, with a scanned maximum successful payload
+      of 1422 and minimum failure of 1423. TCP nevertheless received 1.342 Gbit/s: this kernel/path adapted
+      rather than producing a persistent TCP stall. Errors reported a learned path MTU of 1450. On this
+      kernel VXLAN creation initially rejected the oversized MTU; the builder now creates the device with
+      temporary underlay headroom and restores the configured underlay MTU before testing. The initial
+      failed attempt is preserved separately.
+
+
+      The separate receiving-side mismatch experiment is stronger evidence of a black hole. With only
+      h2 underlay reduced to 1400, payload 1326 succeeded and 1327 failed, four bytes beyond the strict
+      1322 budget. Receiver drops increased from 0 to 29, and the successful iperf3 JSON reported zero
+      received bits/s. Restoring MTU 1500 restored ping. These observations support a four-byte receive
+      tolerance on this virtual path, not a portable allowance. The 1950-MTU lab tunnel initially received
+      one of two 1423-byte probes before a local MTU error, showing why ping exit status alone is insufficient.
+      Underlay and overlay receiver rates were 2.642 and 1.795 Gbit/s respectively; offloads, CPU scheduling
+      and simultaneous software tests limit interpretation.
+
+
+      I select Fix B for a managed data centre because it preserves guest MTU 1500 while providing encapsulation
+      headroom. Every fabric link must support the jumbo setting. The 1450/1500 alternative avoids fabric
+      changes but changes guest settings and reduces useful payload per packet. No claim is made that
+      jumbo frames always improve throughput.'
   p4:
-    question: "If your hypervisors' VTEPs were P4 switches running the lecture's vtep.p4, what would have to fill the vtep_encap table, and how? What would replace flood-and-learn?"
-    answer: |
-      The checkout and available history contain neither the Week 5 P4 tunnel nor the lecture's vtep.p4, so the exact vtep_encap match key, action parameters and previous tunnel header size cannot be verified. At a conceptual level, a controller or management program would need the same tenant membership and endpoint-location information expressed by overlay.yaml: which tenant/VNI owns a destination, its remote VTEP address and the underlay forwarding information. It could use P4Runtime or the lecture program's supported management API to install the corresponding match-action entries. The actual program must be inspected before claiming a particular table schema or issuing table writes.
+    question: If your hypervisors' VTEPs were P4 switches running the lecture's vtep.p4, what would have
+      to fill the vtep_encap table, and how? What would replace flood-and-learn?
+    answer: 'The checkout and available history contain neither the Week 5 P4 tunnel nor the lecture''s
+      vtep.p4, so the exact vtep_encap match key, action parameters and previous tunnel header size cannot
+      be verified. At a conceptual level, a controller or management program would need the same tenant
+      membership and endpoint-location information expressed by overlay.yaml: which tenant/VNI owns a
+      destination, its remote VTEP address and the underlay forwarding information. It could use P4Runtime
+      or the lecture program''s supported management API to install the corresponding match-action entries.
+      The actual program must be inspected before claiming a particular table schema or issuing table
+      writes.
 
-      An endpoint directory or EVPN-informed controller could distribute remote reachability and program the P4 VTEPs instead of discovering every remote MAC through flood-and-learn. It would also need to handle endpoint moves, withdraw stale mappings and define replication for unresolved broadcast/multicast traffic. VXLAN adds 50 bytes for IPv4 or 70 for IPv6 beyond an inner IP packet; only the VTEPs need to understand VXLAN, while the transit fabric forwards the outer IP packet. A custom P4 tunnel requires its encapsulating and decapsulating P4 devices to understand its custom headers; the transit requirements and numeric overhead depend on the missing implementation. Loop prevention similarly depends on that program. In this design there is one logical VXLAN bridge port per tenant at each hypervisor and no local bridge cycle; normal bridge forwarding does not send a received frame back out the same VXLAN port. A loop-free underlay and consistent tenant attachment remain necessary; VXLAN itself is not a universal loop-prevention protocol.
 
-      Level 3 Open AI assistance was used. OpenAI Codex assisted with implementation, debugging, static tests, attempted experiment execution and documentation. Live networking evidence and the missing Week 5 comparison still require verification; the work is not presented as independently completed without AI assistance.
+      An endpoint directory or EVPN-informed controller could distribute remote reachability and program
+      the P4 VTEPs instead of discovering every remote MAC through flood-and-learn. It would also need
+      to handle endpoint moves, withdraw stale mappings and define replication for unresolved broadcast/multicast
+      traffic. VXLAN adds 50 bytes for IPv4 or 70 for IPv6 beyond an inner IP packet; only the VTEPs need
+      to understand VXLAN, while the transit fabric forwards the outer IP packet. A custom P4 tunnel requires
+      its encapsulating and decapsulating P4 devices to understand its custom headers; the transit requirements
+      and numeric overhead depend on the missing implementation. Loop prevention similarly depends on
+      that program. In this design there is one logical VXLAN bridge port per tenant at each hypervisor
+      and no local bridge cycle; normal bridge forwarding does not send a received frame back out the
+      same VXLAN port. A loop-free underlay and consistent tenant attachment remain necessary; VXLAN itself
+      is not a universal loop-prevention protocol.
+
+
+      Level 3 Open AI assistance was used. OpenAI Codex assisted with implementation, debugging, static
+      tests, attempted experiment execution and documentation. Live networking evidence has now been collected;
+      the exact Week 5 comparison still requires the missing source; the work is not presented as independently
+      completed without AI assistance.
+
+      '

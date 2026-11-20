@@ -23,6 +23,9 @@ import yaml
 from build_overlay import all_commands, check_mtu, check_spec, load, plan
 
 EVIDENCE = [
+    ("lab", "evidence6/lab.txt", "Practical Parts 1–6: namespaces, tunnels, throughput and receive MTU"),
+    ("docker", "evidence6/docker.txt", "Part 7: temporary Alpine container on the laptop host"),
+    ("connectivity", "evidence6/connectivity.txt", "All ordered same-tenant VM pairs"),
     ("check", "evidence6/check.txt", "check_mtu() refusing the black-hole design"),
     ("flood", "evidence6/flood.txt", "Flood and learn: the VTEP table before, the flooded broadcast, the table after"),
     ("isolation", "evidence6/isolation.txt", "Two tenants, one address: who answers"),
